@@ -229,7 +229,7 @@ function AdminDashboardContent({ session, onLogout }: any) {
                 </div>
             </nav>
 
-            <main className="pt-24 md:pt-32 pb-12 px-4 max-w-7xl mx-auto">
+            <main className="pt-32 pb-24 px-4 max-w-7xl mx-auto">
                 {renderContent()}
             </main>
         </div>
@@ -240,11 +240,13 @@ function TabButton({ active, onClick, icon, label }: any) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all shrink-0 ${active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-slate-500 hover:bg-slate-100'
+            className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-[10px] md:text-sm font-bold transition-all shrink-0 min-w-[4rem] md:min-w-auto ${active
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 scale-105'
+                : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                 }`}
         >
             {icon}
-            <span className="hidden sm:inline">{label}</span>
+            <span className="whitespace-nowrap">{label}</span>
         </button>
     );
 }
@@ -265,7 +267,30 @@ function WebinarsView({ webinars, onUpdate }: any) {
                 </button>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
+            <div className="grid grid-cols-1 md:hidden gap-4">
+                {webinars.map((web: any) => (
+                    <div key={web.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4 relative overflow-hidden">
+                        <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-bold uppercase tracking-widest ${web.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'
+                            }`}>
+                            {web.status}
+                        </div>
+                        <div>
+                            <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-bold uppercase tracking-widest">{web.event_type}</span>
+                            <h3 className="text-lg font-bold text-slate-900 mt-2">{web.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
+                            <div className="flex items-center gap-1"><Calendar size={14} /> {new Date(web.date).toLocaleDateString()}</div>
+                            <div className="flex items-center gap-1"><History size={14} /> {web.time}</div>
+                        </div>
+                        <div className="pt-4 border-t border-slate-50 flex gap-2">
+                            <button onClick={() => { setEditingWebinar(web); setShowForm(true); }} className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest">Edit</button>
+                            <button onClick={() => { if (confirm('Delete?')) api.webinar.delete(web.id).then(onUpdate); }} className="p-3 bg-rose-50 text-rose-600 rounded-xl"><Trash2 size={16} /></button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="hidden md:block bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
@@ -278,7 +303,7 @@ function WebinarsView({ webinars, onUpdate }: any) {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {webinars.map((web: any) => (
-                            <tr key={web.id} className="hover:bg-slate-50/50 group">
+                            <tr key={web.id} className="hover:bg-slate-50/50 group transition-colors">
                                 <td className="px-6 py-4">
                                     <p className="text-sm font-bold text-slate-900">{web.title}</p>
                                 </td>
@@ -295,16 +320,16 @@ function WebinarsView({ webinars, onUpdate }: any) {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <div className="flex justify-end gap-2">
+                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => { setEditingWebinar(web); setShowForm(true); }}
-                                            className="p-2 text-slate-300 hover:text-emerald-600 transition-colors"
+                                            className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
                                         >
-                                            <Sheet size={16} />
+                                            <MoreVertical size={16} />
                                         </button>
                                         <button
-                                            onClick={async () => { if (confirm('Delete event?')) { await api.webinar.delete(web.id); onUpdate(); } }}
-                                            className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                            onClick={() => { if (confirm('Delete webinar?')) api.webinar.delete(web.id).then(onUpdate); }}
+                                            className="p-2 hover:bg-rose-50 text-rose-500 rounded-lg transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -564,7 +589,47 @@ function CRMView({ registrations, searchTerm, setSearchTerm, onUpdate, courses, 
                 </select>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
+            <div className="grid grid-cols-1 md:hidden gap-4">
+                {filtered.length > 0 ? filtered.map((reg: any) => (
+                    <div key={reg.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3 relative overflow-hidden">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="font-bold text-slate-900">{reg.name}</h3>
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold mt-1">
+                                    <ShieldCheck size={10} /> {reg.city || 'No Location'}
+                                </div>
+                            </div>
+                            <div className="flex gap-1">
+                                <button onClick={() => setSelectedLead(reg)} className="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><Sheet size={16} /></button>
+                                <button onClick={async () => { if (confirm('Delete lead?')) { await api.webinar.deleteRegistration(reg.id); onUpdate(); } }} className="p-2 bg-rose-50 text-rose-500 rounded-xl"><Trash2 size={16} /></button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-xs border-t border-slate-50 pt-3">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Contact</span>
+                                <span className="font-bold text-slate-600">{reg.whatsapp}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 items-end">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Status</span>
+                                <StatusBadge status={reg.lead_status} />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 bg-slate-50 p-2 rounded-xl">
+                            <span>{reg.campaign_source || 'Organic'}</span>
+                            <span className="uppercase">{reg.webinars?.event_type || 'N/A'}</span>
+                        </div>
+                    </div>
+                )) : (
+                    <div className="p-8 text-center bg-white rounded-[2rem] border border-slate-100">
+                        <Users size={32} className="text-slate-300 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-slate-400">No leads found</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="hidden md:block bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 border-b border-slate-200">
@@ -1030,18 +1095,18 @@ function TasksView({ tasks, onUpdate }: any) {
 
             <div className="lg:col-span-2 space-y-4">
                 {tasks.map((task: any) => (
-                    <div key={task.id} className="bg-white p-5 rounded-3xl border border-slate-200 flex items-center justify-between group">
-                        <div className="flex items-center gap-4">
+                    <div key={task.id} className="bg-white p-5 rounded-3xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 group">
+                        <div className="flex items-start gap-4">
                             <button onClick={() => toggleTask(task)}
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200'}`}>
+                                className={`w-6 h-6 mt-1 md:mt-0 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200'}`}>
                                 {task.status === 'completed' && <CheckCircle size={14} />}
                             </button>
                             <div>
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
                                     <p className={`text-sm font-bold ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{task.title}</p>
                                     {task.priority === 'High' && <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[8px] font-bold uppercase rounded">Urgent</span>}
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex flex-wrap items-center gap-3">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">For {task.assigned_to}</span>
                                     {task.due_date && (
                                         <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -1051,7 +1116,7 @@ function TasksView({ tasks, onUpdate }: any) {
                                 </div>
                             </div>
                         </div>
-                        <button onClick={async () => { await api.tasks.delete(task.id); onUpdate(); }} className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <button onClick={async () => { await api.tasks.delete(task.id); onUpdate(); }} className="p-2 self-end md:self-auto text-slate-300 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100">
                             <Trash2 size={16} />
                         </button>
                     </div>
@@ -1744,7 +1809,44 @@ function UsersView({ users, courses, onUpdate }: any) {
                     </button>
                 </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="grid grid-cols-1 md:hidden gap-4 p-4">
+                {paginated.map((u: any) => (
+                    <div key={u.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center font-bold text-indigo-600 shadow-sm shrink-0">
+                                {u.full_name?.[0] || u.email?.[0]?.toUpperCase()}
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="font-bold text-slate-900 text-lg">{u.full_name || 'Anonymous'}</p>
+                                <p className="text-xs font-bold text-slate-400 lowercase truncate">{u.email}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => toggleRole(u.id, u.role)} className={cn("flex-1 py-3 rounded-xl text-[10px] font-bold uppercase border transition-all", u.role === 'ADMIN' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-slate-50 text-slate-400 border-slate-100")}>
+                                {u.role || 'USER'}
+                            </button>
+                            <select
+                                value={u.plan || 'FREE'}
+                                onChange={(e) => handlePlanChange(u.id, e.target.value)}
+                                className={cn("flex-[2] py-3 px-4 rounded-xl text-[10px] font-bold uppercase border outline-none cursor-pointer transition-all appearance-none text-center",
+                                    u.plan !== 'FREE' ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-slate-50 text-slate-400 border-slate-100"
+                                )}
+                            >
+                                <option value="FREE">Free Plan</option>
+                                <option disabled>──────</option>
+                                {courses.map((c: any) => (
+                                    <option key={c.id} value={c.name}>{c.name}</option>
+                                ))}
+                                <option value="PREMIUM">Premium</option>
+                                <option value="PRO">Pro</option>
+                            </select>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 font-heading">
                         <tr>
