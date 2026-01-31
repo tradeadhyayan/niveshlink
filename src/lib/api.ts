@@ -200,6 +200,11 @@ export const api = {
             const { data, error } = await supabase.from('courses').update(updates).eq('id', id);
             if (error) throw error;
             return data;
+        },
+        delete: async (id: string) => {
+            const { error } = await supabase.from('courses').delete().eq('id', id);
+            if (error) throw error;
+            return true;
         }
     },
     batches: {
@@ -263,22 +268,50 @@ export const api = {
         addInstallment: async (installment: any) => {
             const { data, error } = await supabase
                 .from('fee_installments')
-                .insert(installment);
+                .insert(installment)
+                .select()
+                .single();
             if (error) throw error;
 
+            await api.fees._recalculateFees(installment.registration_id);
+            return data;
+        },
+        updateInstallment: async (id: string, updates: any) => {
+            const { data, error } = await supabase
+                .from('fee_installments')
+                .update(updates)
+                .eq('id', id)
+                .select()
+                .single();
+            if (error) throw error;
+
+            if (data?.registration_id) {
+                await api.fees._recalculateFees(data.registration_id);
+            }
+            return data;
+        },
+        deleteInstallment: async (id: string, registrationId: string) => {
+            const { error } = await supabase
+                .from('fee_installments')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+
+            await api.fees._recalculateFees(registrationId);
+            return true;
+        },
+        _recalculateFees: async (registrationId: string) => {
             const { data: allInstallments } = await supabase
                 .from('fee_installments')
                 .select('amount')
-                .eq('registration_id', installment.registration_id);
+                .eq('registration_id', registrationId);
 
             const total = allInstallments?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
             await supabase
                 .from('webinar_registrations')
                 .update({ fees_paid: total })
-                .eq('id', installment.registration_id);
-
-            return data;
+                .eq('id', registrationId);
         }
     },
     tasks: {
