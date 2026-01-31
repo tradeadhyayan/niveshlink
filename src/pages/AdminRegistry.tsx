@@ -20,6 +20,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(false);
     const [password, setPassword] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
 
     useEffect(() => {
         // Check active session
@@ -38,16 +39,28 @@ export default function AdminDashboard() {
         return () => subscription.unsubscribe();
     }, []);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setAuthLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
 
-        if (error) {
-            alert(error.message);
+        if (isSignUp) {
+            const { error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: 'Admin User',
+                    }
+                }
+            });
+            if (error) alert(error.message);
+            else alert('Account created! Please check your email for the confirmation link.');
+        } else {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+            if (error) alert(error.message);
         }
         setAuthLoading(false);
     };
@@ -66,9 +79,11 @@ export default function AdminDashboard() {
                         <Lock size={32} />
                     </div>
                     <h2 className="text-2xl font-bold font-heading mb-2">Admin Access</h2>
-                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">Enter your credentials to access the dashboard.</p>
+                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                        {isSignUp ? "Create a new admin account." : "Enter your credentials to access the dashboard."}
+                    </p>
 
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleAuth} className="space-y-4">
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                             <input
@@ -96,16 +111,24 @@ export default function AdminDashboard() {
                             disabled={authLoading}
                             className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-slate-200 hover:bg-emerald-600 transition-colors"
                         >
-                            {authLoading ? 'Verifying...' : 'Unlock Dashboard'}
+                            {authLoading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Unlock Dashboard')}
                         </button>
                     </form>
 
-                    <button
-                        onClick={() => window.location.hash = ''}
-                        className="mt-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
-                    >
-                        Back to Landing
-                    </button>
+                    <div className="flex flex-col gap-2 mt-6">
+                        <button
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors"
+                        >
+                            {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+                        </button>
+                        <button
+                            onClick={() => window.location.hash = ''}
+                            className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
+                        >
+                            Back to Landing
+                        </button>
+                    </div>
                 </div>
             </div>
         );
