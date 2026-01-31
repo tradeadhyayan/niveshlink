@@ -7,41 +7,58 @@ import {
     CheckCircle, TrendingUp, HandCoins,
     IndianRupee, History, Receipt,
     Sheet, Link, AlertTriangle, Lock, Download,
-    Mail, ShieldCheck, ClipboardPaste, X, Video, Zap, MoreVertical
+    Mail, ShieldCheck, ClipboardPaste, X, Video, Zap, MoreVertical, LogOut,
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, supabase } from '../lib/api';
 import { cn } from '../lib/utils';
 
 type Tab = 'dashboard' | 'crm' | 'webinars' | 'tasks' | 'fees' | 'courses' | 'batches' | 'users' | 'enrolled';
 
 export default function AdminDashboard() {
-    const [authorized, setAuthorized] = useState(false);
+    const [session, setSession] = useState<any>(null);
     const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(false);
-
     const [password, setPassword] = useState('');
 
-    // Check session storage for previous authorization
     useEffect(() => {
-        const isAuth = sessionStorage.getItem('nivesh_admin_auth');
-        if (isAuth === 'true') setAuthorized(true);
+        // Check active session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        // Listen for changes
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setAuthLoading(true);
-        const allowedEmails = ['niveshlink.edu@gmail.com', 'niveshlink.co@gmail.com'];
+        const { error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
 
-        if (allowedEmails.includes(email.toLowerCase().trim()) && password === 'Nivesh@123') {
-            sessionStorage.setItem('nivesh_admin_auth', 'true');
-            setAuthorized(true);
-        } else {
-            alert('Access Denied: Invalid email or password.');
+        if (error) {
+            alert(error.message);
         }
         setAuthLoading(false);
     };
 
-    if (!authorized) {
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+    };
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><RefreshCcw className="animate-spin text-emerald-600" /></div>;
+
+    if (!session) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
                 <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 md:p-10 shadow-xl border border-slate-100 text-center animate-in fade-in zoom-in duration-500">
@@ -94,10 +111,10 @@ export default function AdminDashboard() {
         );
     }
 
-    return <AdminDashboardContent />;
+    return <AdminDashboardContent session={session} onLogout={handleLogout} />;
 }
 
-function AdminDashboardContent() {
+function AdminDashboardContent({ session, onLogout }: any) {
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
     const [registrations, setRegistrations] = useState<any[]>([]);
     const [tasks, setTasks] = useState<any[]>([]);
@@ -161,7 +178,10 @@ function AdminDashboardContent() {
                         </button>
                         <div className="flex items-center gap-2">
                             <ShieldCheck size={20} className="text-emerald-600 hidden md:block" />
-                            <h1 className="text-base md:text-xl font-bold font-heading text-emerald-600">Admin Dashboard</h1>
+                            <div>
+                                <h1 className="text-base md:text-xl font-bold font-heading text-emerald-600">Admin Dashboard</h1>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{session?.user?.email}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -175,9 +195,14 @@ function AdminDashboardContent() {
                         <TabButton active={activeTab === 'fees'} onClick={() => setActiveTab('fees')} icon={<HandCoins size={16} />} label="Fees" />
                     </div>
 
-                    <button onClick={fetchData} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg shrink-0">
-                        <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={fetchData} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg shrink-0">
+                            <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
+                        </button>
+                        <button onClick={onLogout} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg shrink-0 transition-colors">
+                            <LogOut size={18} />
+                        </button>
+                    </div>
                 </div>
             </nav>
 
