@@ -23,10 +23,17 @@ export default function AdminDashboard() {
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
 
+    const AUTHORIZED_EMAILS = ['niveshlink.edu@gmail.com', 'Niveshlink.co@gmail.com'];
+
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
+            if (session?.user?.email && !AUTHORIZED_EMAILS.includes(session.user.email)) {
+                supabase.auth.signOut();
+                setSession(null);
+            } else {
+                setSession(session);
+            }
             setLoading(false);
         });
 
@@ -34,7 +41,13 @@ export default function AdminDashboard() {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
+            if (session?.user?.email && !AUTHORIZED_EMAILS.includes(session.user.email)) {
+                supabase.auth.signOut();
+                setSession(null);
+                alert('Unauthorized access. Access restricted to admin emails only.');
+            } else {
+                setSession(session);
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -42,11 +55,18 @@ export default function AdminDashboard() {
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const cleanEmail = email.trim().toLowerCase();
+        if (!AUTHORIZED_EMAILS.map(e => e.toLowerCase()).includes(cleanEmail)) {
+            alert('This email is not authorized for Admin access.');
+            return;
+        }
+
         setAuthLoading(true);
 
         if (isSignUp) {
             const { error } = await supabase.auth.signUp({
-                email: email,
+                email: cleanEmail,
                 password: password,
                 options: {
                     data: {
@@ -58,7 +78,7 @@ export default function AdminDashboard() {
             else alert('Account created! Please check your email for the confirmation link.');
         } else {
             const { error } = await supabase.auth.signInWithPassword({
-                email: email,
+                email: cleanEmail,
                 password: password,
             });
             if (error) alert(error.message);
@@ -81,7 +101,7 @@ export default function AdminDashboard() {
                     </div>
                     <h2 className="text-2xl font-bold font-heading mb-2">Admin Access</h2>
                     <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-                        {isSignUp ? "Create a new admin account." : "Enter your credentials to access the dashboard."}
+                        {isSignUp ? "Create a new authorized admin account." : "Access restricted to authorized personnel only."}
                     </p>
 
                     <form onSubmit={handleAuth} className="space-y-4">
@@ -90,7 +110,7 @@ export default function AdminDashboard() {
                             <input
                                 required
                                 type="email"
-                                placeholder="name@niveshlink.co"
+                                placeholder="authorized-email@gmail.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent focus:border-emerald-500/20 rounded-2xl outline-none text-sm font-bold transition-all"
