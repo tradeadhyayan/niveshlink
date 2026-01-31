@@ -1568,9 +1568,66 @@ function EnrolledView({ users }: any) {
     );
 }
 
+const AddUserModal = ({ onClose, onAdd, courses }: any) => {
+    const [formData, setFormData] = useState({
+        full_name: '',
+        email: '',
+        phone: '',
+        plan: 'FREE',
+        amount: ''
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await onAdd(formData);
+            onClose();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold font-heading text-slate-900">Add New Student</h3>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-full transition-colors"><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Full Name</label>
+                        <input required className="w-full px-4 py-3 bg-slate-50 rounded-xl border-slate-200 outline-none text-sm font-bold" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
+                        <input required type="email" className="w-full px-4 py-3 bg-slate-50 rounded-xl border-slate-200 outline-none text-sm font-bold" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Phone</label>
+                        <input required className="w-full px-4 py-3 bg-slate-50 rounded-xl border-slate-200 outline-none text-sm font-bold" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Plan / Course</label>
+                        <select className="w-full px-4 py-3 bg-slate-50 rounded-xl border-slate-200 outline-none text-sm font-bold" value={formData.plan} onChange={e => setFormData({ ...formData, plan: e.target.value })}>
+                            <option value="FREE">Free Plan</option>
+                            <option disabled>──────</option>
+                            {courses.map((c: any) => <option key={c.id} value={c.name}>{c.name} (₹{c.price})</option>)}
+                        </select>
+                    </div>
+                    <button type="submit" className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-200">
+                        Create User
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 function UsersView({ users, courses, onUpdate }: any) {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
+    const [showAddModal, setShowAddModal] = useState(false);
     const ITEMS_PER_PAGE = 30;
 
     const handlePlanChange = async (userId: string, newPlan: string) => {
@@ -1596,6 +1653,19 @@ function UsersView({ users, courses, onUpdate }: any) {
         } catch (err) { alert('Failed'); }
     };
 
+    const handleAddUser = async (data: any) => {
+        await api.users.create({
+            full_name: data.full_name,
+            email: data.email,
+            phone: data.phone,
+            plan: data.plan,
+            role: 'USER',
+            subscription_status: data.plan !== 'FREE' ? 'ACTIVE' : 'INACTIVE',
+            created_at: new Date().toISOString()
+        });
+        onUpdate();
+    };
+
     const filtered = users.filter((u: any) =>
         u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1605,19 +1675,25 @@ function UsersView({ users, courses, onUpdate }: any) {
 
     return (
         <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {showAddModal && <AddUserModal onClose={() => setShowAddModal(false)} onAdd={handleAddUser} courses={courses} />}
             <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-6">
                 <div>
                     <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight font-heading">Member Registry</h3>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                        placeholder="Search users..."
-                        className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold w-full md:w-64 focus:outline-none"
-                    />
+                <div className="flex gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                            placeholder="Search users..."
+                            className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold w-full md:w-64 focus:outline-none"
+                        />
+                    </div>
+                    <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all flex items-center gap-2">
+                        <Plus size={16} /> Add Student
+                    </button>
                 </div>
             </div>
             <div className="overflow-x-auto">

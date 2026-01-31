@@ -242,6 +242,13 @@ export const api = {
             if (error) throw error;
             return data;
         },
+        create: async (user: any) => {
+            // Note: This creates a profile record. For login access, Supabase Auth signUp is needed.
+            // This assumes we are just adding a record to the public.users table for CRM/tracking.
+            const { data, error } = await supabase.from('users').insert(user).select().single();
+            if (error) throw error;
+            return data;
+        },
         updateProfile: async (id: string, updates: any) => {
             const { data, error } = await supabase.from('users').update(updates).eq('id', id);
             if (error) throw error;
