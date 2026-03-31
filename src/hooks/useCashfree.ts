@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/api';
 import { load } from '@cashfreepayments/cashfree-js';
+import { supabase } from '../lib/api';
 
 export function useCashfree() {
     const [loading, setLoading] = useState(false);
