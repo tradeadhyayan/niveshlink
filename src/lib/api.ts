@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://rzvffgmzmsfbnyycctna.supabase.co';
-const supabaseAnonKey = 'sb_publishable__UvKR7kEGGMoIW7BCYJfDg_jVzlUAuS';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kdrvqtptpymaoekiwirf.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkcnZxdHB0cHltYW9la2l3aXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxMDk4MDYsImV4cCI6MjA4NDY4NTgwNn0.JxLadWkV1W-i1sB63AhZfQ883Uz3GVTutPw8jImMWmo';
 
 console.log('Nivesh Link API Version: 1.0.7');
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -49,15 +49,22 @@ export const api = {
             }
         },
         register: async (registration: any) => {
-            const { data, error } = await supabase
+            const clean = { ...registration };
+            // Clear empty strings and UI fields
+            Object.keys(clean).forEach(k => {
+                if (clean[k] === '' || clean[k] === undefined) delete clean[k];
+            });
+            delete clean.initial_payment;
+
+            const { error } = await supabase
                 .from('webinar_registrations')
-                .upsert(registration, { onConflict: 'whatsapp' }); // Use upsert for sync safety
+                .insert(clean);
 
             if (error) {
                 console.error('Registration/Sync Error:', error);
-                throw error;
+                throw new Error(error.message);
             }
-            return data;
+            return true;
         },
         getAllRegistrations: async () => {
             const { data, error } = await supabase
@@ -68,7 +75,7 @@ export const api = {
             if (error) throw error;
             return data;
         },
-        getRegistrationsPaginated: async ({ page = 1, limit = 50, query = '', status = '', source = '', webinar_id = '' }: any) => {
+        getRegistrationsPaginated: async ({ page = 1, limit = 50, query = '', status = '', source = '', webinar_id = '', type = 'all', pending = false }: any) => {
             const from = (page - 1) * limit;
             const to = from + limit - 1;
 
@@ -82,15 +89,27 @@ export const api = {
             if (status && status !== 'All') dbQuery = dbQuery.eq('lead_status', status);
             if (source && source !== 'All') dbQuery = dbQuery.eq('campaign_source', source);
             if (webinar_id && webinar_id !== 'All') dbQuery = dbQuery.eq('webinar_id', webinar_id);
-            // type filtering for webinar/demo/seminar needs join filtering, which is complex in simple query.
-            // Simplified: If webinar_id is passed, we filter by that. "Type" usually maps to a set of webinar_ids in logic or requires embedded resource filtering.
-            // For now, we will rely on webinar_id filtering, or client side logic if volume allows, but for 100k, we need server side.
-            // Let's assume 'type' filter isn't strictly enforced on DB level yet unless we denormalize or use !inner join. 
-            // We will stick to basic filters first.
+
+            if (type === 'events') {
+                dbQuery = dbQuery.not('webinar_id', 'is', null);
+            } else if (type === 'demo') {
+                dbQuery = dbQuery.eq('lead_status', 'demo');
+            } else if (type === 'follow_up') {
+                dbQuery = dbQuery.not('next_follow_up_date', 'is', null)
+                    .order('next_follow_up_date', { ascending: true });
+                if (pending) {
+                    // Still filter by date if specifically requested for a "pending" list
+                    dbQuery = dbQuery.lte('next_follow_up_date', new Date().toISOString().split('T')[0]);
+                }
+            }
 
             const { data, count, error } = await dbQuery;
             if (error) throw error;
             return { data, count };
+        },
+        removeFromWebinar: async (id: string) => {
+            const { error } = await supabase.from('webinar_registrations').update({ webinar_id: null }).eq('id', id);
+            if (error) throw error;
         },
         updateLead: async (id: string, updates: any) => {
             const { data, error } = await supabase
@@ -100,47 +119,150 @@ export const api = {
             if (error) throw error;
             return data;
         },
-        syncBulk: async (leads: any[]) => {
+        syncBulk: async (leads: any[], metadata: { source: string, type: string, webinar_id?: string } = { source: 'Manual', type: 'leads' }) => {
+            // 1. Create Import Record
+            const { data: importRec, error: impErr } = await supabase
+                .from('lead_imports')
+                .insert({
+                    source: metadata.source,
+                    import_type: metadata.type,
+                    webinar_id: metadata.webinar_id,
+                    record_count: leads.length
+                })
+                .select()
+                .single();
+
+            if (impErr) console.error('Import Record Error:', impErr);
+
+            // 2. Deduplicate leads by whatsapp
+            const seen = new Set();
+            const deduplicated = leads.filter(l => {
+                if (!l.whatsapp) return false;
+                if (seen.has(l.whatsapp)) return false;
+                seen.add(l.whatsapp);
+                return true;
+            });
+
+            const cleanedLeads = deduplicated.map(l => {
+                const clean = { ...l, import_id: importRec?.id };
+                Object.keys(clean).forEach(k => {
+                    if (clean[k] === '' || clean[k] === undefined) delete clean[k];
+                });
+                return clean;
+            });
+
+            // 3. Upsert
             const { data, error } = await supabase
                 .from('webinar_registrations')
-                .upsert(leads, { onConflict: 'whatsapp' });
+                .upsert(cleanedLeads, { onConflict: 'whatsapp,webinar_id' })
+                .select();
+
+            if (error) {
+                console.error('Bulk Sync Error:', error);
+                throw new Error(error.message);
+            }
+            return { data, importId: importRec?.id };
+        },
+        deleteAllRegistrations: async () => {
+            const { error } = await supabase.from('webinar_registrations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+            if (error) throw error;
+            return true;
+        },
+        bulkUpdateLeads: async (ids: string[], updates: any) => {
+            const { data, error } = await supabase
+                .from('webinar_registrations')
+                .update(updates)
+                .in('id', ids);
             if (error) throw error;
             return data;
         },
+        syncToSheets: async (leads: any[], webhookUrl: string) => {
+            // If the user provides a Google Apps Script Webhook
+            await fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leads, timestamp: new Date().toISOString() })
+            });
+            return true;
+        },
         getDashboardStats: async () => {
-            const [total, hot, enrolled] = await Promise.all([
-                supabase.from('webinar_registrations').select('*', { count: 'exact', head: true }),
-                supabase.from('webinar_registrations').select('*', { count: 'exact', head: true }).eq('lead_status', 'hot'),
-                supabase.from('webinar_registrations').select('*', { count: 'exact', head: true }).eq('lead_status', 'enrolled'),
-            ]);
+            const today = new Date().toISOString().split('T')[0];
 
-            // Revenue calculation - only fetch the fees_paid column for enrolled leads
-            const { data: revenueData } = await supabase
+            // Fetch relevant columns for all registrations to compute metrics
+            const { data: allRegs, error } = await supabase
                 .from('webinar_registrations')
-                .select('fees_paid')
-                .eq('lead_status', 'enrolled');
+                .select('campaign_source, lead_status, fees_paid, next_follow_up_date');
 
-            const totalRevenue = revenueData?.reduce((acc, curr) => acc + (Number(curr.fees_paid) || 0), 0) || 0;
+            if (error) throw error;
 
-            // Campaigns - potentially many, so we fetch only the source column
-            // For 100k, this is still 100k strings, but much better than 100k full objects.
-            const { data: sourceData } = await supabase
-                .from('webinar_registrations')
-                .select('campaign_source');
+            const stats = {
+                total: allRegs.length,
+                hot: 0,
+                demo: 0,
+                enrolled: 0,
+                revenue: 0,
+                follow_ups: 0,
+                campaigns: {} as any
+            };
 
-            const campaigns: any = {};
-            sourceData?.forEach(r => {
+            allRegs.forEach(r => {
+                if (r.lead_status === 'hot') stats.hot++;
+                if (r.lead_status === 'demo') stats.demo++;
+                if (r.lead_status === 'enrolled') {
+                    stats.enrolled++;
+                    stats.revenue += (Number(r.fees_paid) || 0);
+                }
+
+                // Track follow-ups due today or overdue
+                if (r.next_follow_up_date && r.next_follow_up_date <= today && r.lead_status !== 'enrolled') {
+                    stats.follow_ups++;
+                }
+
                 const s = r.campaign_source || 'Organic';
-                campaigns[s] = (campaigns[s] || 0) + 1;
+                if (!stats.campaigns[s]) stats.campaigns[s] = { total: 0, enrolled: 0 };
+                stats.campaigns[s].total++;
+                if (r.lead_status === 'enrolled') stats.campaigns[s].enrolled++;
             });
 
-            return {
-                total: total.count || 0,
-                hot: hot.count || 0,
-                enrolled: enrolled.count || 0,
-                revenue: totalRevenue,
-                campaigns
-            };
+            return stats;
+        },
+        getCalendarEvents: async () => {
+            // Fetch: 1. Webinars, 2. Tasks with due dates, 3. Leads with follow up dates
+            const [webs, tsks, folls] = await Promise.all([
+                supabase.from('webinars').select('*').eq('status', 'active'),
+                supabase.from('admin_tasks').select('*').not('due_date', 'is', null),
+                supabase.from('webinar_registrations').select('id, name, whatsapp, next_follow_up_date, lead_status, last_feedback').not('next_follow_up_date', 'is', null)
+            ]);
+
+            const events: any[] = [];
+
+            webs.data?.forEach(w => events.push({
+                id: `web-${w.id}`,
+                title: `[${w.event_type}] ${w.title}`,
+                date: w.date,
+                type: 'event',
+                color: 'bg-emerald-500',
+                raw: w
+            }));
+            tsks.data?.forEach(t => events.push({
+                id: `tsk-${t.id}`,
+                title: `[Task] ${t.title}`,
+                date: t.due_date,
+                type: 'task',
+                color: t.status === 'completed' ? 'bg-slate-400' : 'bg-indigo-500',
+                raw: t
+            }));
+            folls.data?.forEach(f => events.push({
+                id: `fol-${f.id}`,
+                title: `[FollowUp] ${f.name}`,
+                date: f.next_follow_up_date,
+                type: 'followup',
+                color: 'bg-orange-500',
+                raw: f
+            }));
+
+            return events;
         },
         getFeesPaginated: async ({ page = 1, limit = 50, query = '' }: any) => {
             const from = (page - 1) * limit;
@@ -205,21 +327,6 @@ export const api = {
             const { error } = await supabase.from('courses').delete().eq('id', id);
             if (error) throw error;
             return true;
-        }
-    },
-    batches: {
-        getAll: async () => {
-            const { data, error } = await supabase
-                .from('batches')
-                .select('*, courses(name)')
-                .order('start_date', { ascending: false });
-            if (error) throw error;
-            return data;
-        },
-        create: async (batch: any) => {
-            const { data, error } = await supabase.from('batches').insert(batch).select().single();
-            if (error) throw error;
-            return data;
         }
     },
     content: {
@@ -312,6 +419,49 @@ export const api = {
                 .from('webinar_registrations')
                 .update({ fees_paid: total })
                 .eq('id', registrationId);
+        },
+        importBulk: async (records: any[]) => {
+            for (const record of records) {
+                let regId = null;
+                const { data: reg } = await supabase
+                    .from('webinar_registrations')
+                    .select('id')
+                    .eq('whatsapp', record.whatsapp)
+                    .maybeSingle();
+
+                if (reg?.id) {
+                    regId = reg.id;
+                } else {
+                    const { data: newReg, error: regErr } = await supabase
+                        .from('webinar_registrations')
+                        .insert({
+                            whatsapp: record.whatsapp,
+                            name: record.name || 'Bulk Client',
+                            lead_status: 'enrolled',
+                            campaign_source: 'Manual Import',
+                            created_at: new Date().toISOString()
+                        })
+                        .select('id')
+                        .single();
+                    if (regErr) {
+                        console.error('Error creating student in bulk:', regErr);
+                        continue; // Skip this one if failed
+                    }
+                    if (newReg) regId = newReg.id;
+                }
+
+                if (regId) {
+                    const { error: insErr } = await supabase.from('fee_installments').insert({
+                        registration_id: regId,
+                        amount: record.amount,
+                        method: record.method || 'Bulk Import',
+                        payment_date: record.date || new Date().toISOString()
+                    });
+                    if (insErr) console.error('Error adding installment in bulk:', insErr);
+                    await api.fees._recalculateFees(regId);
+                }
+            }
+            return true;
         }
     },
     tasks: {
@@ -369,11 +519,77 @@ export const api = {
             return data;
         }
     },
+    batches: {
+        getAll: async () => {
+            const { data, error } = await supabase
+                .from('batches')
+                .select('*, courses:course_id(name, price)')
+                .order('start_date', { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+        create: async (batch: any) => {
+            const { data, error } = await supabase.from('batches').insert(batch).select().single();
+            if (error) throw error;
+            return data;
+        },
+        update: async (id: string, updates: any) => {
+            const { data, error } = await supabase.from('batches').update(updates).eq('id', id);
+            if (error) throw error;
+            return data;
+        },
+        delete: async (id: string) => {
+            const { error } = await supabase.from('batches').delete().eq('id', id);
+            if (error) throw error;
+        }
+    },
     admin: {
         listUsers: async () => {
             const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
             if (error) throw error;
             return data;
+        },
+        getImports: async () => {
+            const { data, error } = await supabase
+                .from('lead_imports')
+                .select('*, webinars(title)')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+        deleteImport: async (id: string, removeLeads: boolean = false) => {
+            if (removeLeads) {
+                // Delete registrations associated with this import
+                await supabase.from('webinar_registrations').delete().eq('import_id', id);
+            }
+            const { error } = await supabase.from('lead_imports').delete().eq('id', id);
+            if (error) throw error;
+            return true;
+        },
+        getAnalyticsData: async () => {
+            // Fetch comprehensive data for conversion and ROI analysis
+            const [regs, exps] = await Promise.all([
+                supabase.from('webinar_registrations').select('id, created_at, campaign_source, lead_status, fees_paid, fees_pending'),
+                supabase.from('expenses').select('*')
+            ]);
+            return { registrations: regs.data || [], expenses: exps.data || [] };
+        }
+    },
+    expenses: {
+        list: async () => {
+            const { data, error } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+        create: async (expense: any) => {
+            const { data, error } = await supabase.from('expenses').insert(expense).select().single();
+            if (error) throw error;
+            return data;
+        },
+        delete: async (id: string) => {
+            const { error } = await supabase.from('expenses').delete().eq('id', id);
+            if (error) throw error;
+            return true;
         }
     }
 };

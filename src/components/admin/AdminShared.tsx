@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export type Tab = 'dashboard' | 'crm' | 'enrolled' | 'webinars' | 'tasks' | 'fees' | 'courses' | 'batches' | 'seminars';
+export type Tab = 'dashboard' | 'calendar' | 'crm' | 'enrolled' | 'webinars' | 'tasks' | 'fees' | 'courses' | 'batches' | 'seminars' | 'analytics' | 'expenses' | 'landing';
 
 interface StatCardProps {
     label: string;
@@ -15,7 +15,7 @@ export const StatCard = ({ label, val, icon, onClick, color = "bg-white" }: Stat
     <button
         onClick={onClick}
         className={cn(
-            "w-full text-left p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/10 group relative overflow-hidden backdrop-blur-sm",
+            "w-full text-left p-6 md:p-8 rounded-[2.5rem] border border-slate-100/60 shadow-sm transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/10 group relative overflow-hidden backdrop-blur-sm",
             color
         )}
     >
@@ -28,7 +28,7 @@ export const StatCard = ({ label, val, icon, onClick, color = "bg-white" }: Stat
             </div>
         </div>
         <p className="text-3xl md:text-4xl font-bold font-heading tracking-tight text-slate-900 relative z-10 group-hover:text-emerald-700 transition-colors">{val}</p>
-        <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 relative z-10 group-hover:text-slate-600">{label}</p>
+        <p className="text-xs md:text-sm font-black text-slate-600 uppercase tracking-wider mt-2 relative z-10 group-hover:text-slate-900">{label}</p>
         <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
     </button>
 );
@@ -43,22 +43,22 @@ export const StatusBadge = ({ status }: { status: string }) => {
         dead: 'bg-slate-200 text-slate-400'
     };
     return (
-        <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest", colors[status.toLowerCase()] || colors.cold)}>
+        <span className={cn("px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider shadow-sm", colors[status.toLowerCase()] || colors.cold)}>
             {status}
         </span>
     );
 };
 
 export const FormInput = ({ label, type = "text", placeholder, value, onChange, required = true }: any) => (
-    <div className="space-y-1.5 text-left">
-        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">{label}</label>
+    <div className="space-y-2 text-left">
+        <label className="text-xs font-black text-slate-600 uppercase tracking-wider ml-1">{label}</label>
         <input
             required={required}
             type={type}
             placeholder={placeholder}
             value={value}
             onChange={e => onChange(e.target.value)}
-            className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-xl text-sm font-bold outline-none focus:bg-white focus:border-emerald-500/20 transition-all border shadow-small"
+            className="w-full px-5 py-4 bg-slate-50 border border-transparent rounded-xl text-sm font-bold outline-none focus:bg-white focus:border-emerald-500/20 transition-all border shadow-sm"
         />
     </div>
 );

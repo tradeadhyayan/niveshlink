@@ -13,7 +13,7 @@ export function WebinarsView({ webinars, onUpdate }: any) {
                 <h2 className="text-xl font-bold font-heading">Webinar Management</h2>
                 <button
                     onClick={() => { setEditingWebinar(null); setShowForm(true); }}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all"
                 >
                     <Plus size={16} /> New Webinar
                 </button>
@@ -22,11 +22,11 @@ export function WebinarsView({ webinars, onUpdate }: any) {
             <div className="grid grid-cols-1 md:hidden gap-4">
                 {webinars.map((web: any) => (
                     <div key={web.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4 relative overflow-hidden">
-                        <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-bold uppercase tracking-widest ${web.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
+                        <div className={`absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl text-[10px] font-bold uppercase tracking-wider ${web.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
                             {web.status}
                         </div>
                         <div>
-                            <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-bold uppercase tracking-widest">{web.event_type}</span>
+                            <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-bold uppercase tracking-wider">{web.event_type}</span>
                             <h3 className="text-lg font-bold text-slate-900 mt-2">{web.title}</h3>
                         </div>
                         <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
@@ -34,7 +34,7 @@ export function WebinarsView({ webinars, onUpdate }: any) {
                             <div className="flex items-center gap-1"><History size={14} /> {web.time}</div>
                         </div>
                         <div className="pt-4 border-t border-slate-50 flex gap-2">
-                            <button onClick={() => { setEditingWebinar(web); setShowForm(true); }} className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest">Edit</button>
+                            <button onClick={() => { setEditingWebinar(web); setShowForm(true); }} className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider">Edit</button>
                             <button onClick={() => { if (window.confirm('Delete?')) api.webinar.delete(web.id).then(onUpdate); }} className="p-3 bg-rose-50 text-rose-600 rounded-xl"><Trash2 size={16} /></button>
                         </div>
                     </div>
@@ -45,11 +45,11 @@ export function WebinarsView({ webinars, onUpdate }: any) {
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
-                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Topic / Title</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date & Time</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Topic / Title</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date & Time</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -60,13 +60,13 @@ export function WebinarsView({ webinars, onUpdate }: any) {
                                 </td>
                                 <td className="px-6 py-4">
                                     <p className="text-xs font-bold text-slate-600">{new Date(web.date).toLocaleDateString()}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{web.time}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{web.time}</p>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase tracking-widest">{web.event_type}</span>
+                                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase tracking-wider">{web.event_type}</span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest ${web.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
+                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider ${web.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>
                                         {web.status}
                                     </span>
                                 </td>
@@ -133,7 +133,7 @@ function WebinarForm({ webinar, onClose, onUpdate }: any) {
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-left">
                         <div className="space-y-1.5">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Event Type</label>
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Event Type</label>
                             <select value={form.event_type} onChange={(e) => setForm({ ...form, event_type: e.target.value })} className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl text-sm font-bold outline-none cursor-pointer">
                                 <option value="Webinar">Webinar</option>
                                 <option value="Demo Session">Demo Session</option>
@@ -141,7 +141,7 @@ function WebinarForm({ webinar, onClose, onUpdate }: any) {
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
                             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl text-sm font-bold outline-none cursor-pointer">
                                 <option value="active">Active</option>
                                 <option value="completed">Past / Closed</option>
@@ -151,7 +151,7 @@ function WebinarForm({ webinar, onClose, onUpdate }: any) {
                     </div>
                     <FormInput label="WhatsApp Group Link" value={form.whatsapp_group_link} onChange={(v: string) => setForm({ ...form, whatsapp_group_link: v })} />
                     <FormInput label="Meeting Link" value={form.link} onChange={(v: string) => setForm({ ...form, link: v })} />
-                    <button type="submit" disabled={loading} className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-bold text-[10px] uppercase tracking-widest mt-6 shadow-xl shadow-slate-200 hover:bg-emerald-600 transition-all">{loading ? 'Processing...' : (webinar ? 'Update Details' : 'Finalize & Launch Event')}</button>
+                    <button type="submit" disabled={loading} className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-bold text-[10px] uppercase tracking-wider mt-6 shadow-xl shadow-slate-200 hover:bg-emerald-600 transition-all">{loading ? 'Processing...' : (webinar ? 'Update Details' : 'Finalize & Launch Event')}</button>
                 </form>
             </div>
         </div>

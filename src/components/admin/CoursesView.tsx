@@ -40,9 +40,9 @@ export function CoursesView({ courses, onUpdate }: any) {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-xl font-bold font-heading">Course Directory</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Manage curriculum and pricing</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Manage curriculum and pricing</p>
                 </div>
-                <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all">
+                <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all">
                     <Plus size={16} /> New Course
                 </button>
             </div>
@@ -61,15 +61,15 @@ export function CoursesView({ courses, onUpdate }: any) {
                                 </div>
                             </div>
                             <h3 className="text-lg font-bold mb-1">{course.name}</h3>
-                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-4 inline-block bg-emerald-50 px-2 py-0.5 rounded-lg">{course.duration || 'Flexible'}</p>
+                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-4 inline-block bg-emerald-50 px-2 py-0.5 rounded-lg">{course.duration || 'Flexible'}</p>
                             <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-6 leading-relaxed">{course.description || 'Professional coaching module.'}</p>
                         </div>
                         <div className="flex items-center justify-between pt-6 border-t border-slate-50">
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Tuition Fee</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Tuition Fee</p>
                                 <span className="text-xl font-bold text-slate-900">₹{course.price.toLocaleString()}</span>
                             </div>
-                            <button onClick={() => setEditingCourse(course)} className="px-5 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-600 transition-all">Edit</button>
+                            <button onClick={() => setEditingCourse(course)} className="px-5 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-50 hover:text-emerald-600 transition-all">Edit</button>
                         </div>
                     </div>
                 ))}
@@ -102,7 +102,7 @@ export function CoursesView({ courses, onUpdate }: any) {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Short Description</label>
+                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Short Description</label>
                                 <textarea
                                     value={editingCourse ? editingCourse.description : newCourse.description}
                                     onChange={e => editingCourse ? setEditingCourse({ ...editingCourse, description: e.target.value }) : setNewCourse({ ...newCourse, description: e.target.value })}
@@ -110,7 +110,7 @@ export function CoursesView({ courses, onUpdate }: any) {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Course Curriculum</label>
+                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Course Curriculum</label>
                                 <textarea
                                     value={editingCourse ? editingCourse.curriculum : newCourse.curriculum}
                                     onChange={e => editingCourse ? setEditingCourse({ ...editingCourse, curriculum: e.target.value }) : setNewCourse({ ...newCourse, curriculum: e.target.value })}
@@ -119,7 +119,7 @@ export function CoursesView({ courses, onUpdate }: any) {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Other Details</label>
+                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Other Details</label>
                                 <textarea
                                     value={editingCourse ? editingCourse.other_details : newCourse.other_details}
                                     onChange={e => editingCourse ? setEditingCourse({ ...editingCourse, other_details: e.target.value }) : setNewCourse({ ...newCourse, other_details: e.target.value })}

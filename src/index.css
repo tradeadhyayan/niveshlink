@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --app-bg: #ffffff;
+  --app-bg: #fdfdfd;
   --app-text: #0f172a;
   --app-text-muted: #64748b;
   --app-accent: #10b981;
   /* keeping emerald as accent */
-  --font-heading: 'Quicksand', sans-serif;
-  --font-body: 'Quicksand', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 @layer base {
