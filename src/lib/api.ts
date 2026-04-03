@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kdrvqtptpymaoekiwirf.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkcnZxdHB0cHltYW9la2l3aXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxMDk4MDYsImV4cCI6MjA4NDY4NTgwNn0.JxLadWkV1W-i1sB63AhZfQ883Uz3GVTutPw8jImMWmo';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rzvffgmzmsfbnyycctna.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6dmZmZ216bXNmYm55eWNjdG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2ODMxOTcsImV4cCI6MjA4NTI1OTE5N30.fkLg5uJS029mhvBh41qkx6_t1eRW6u1HGB-wvrmIq9s';
 
 console.log('Nivesh Link API Version: 1.0.7');
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
