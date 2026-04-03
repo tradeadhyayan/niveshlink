@@ -1,332 +1,350 @@
 import React, { useState } from 'react';
 import {
-    Calendar, Clock, Video, CheckCircle2,
-    ArrowRight, Sparkles, Zap,
-    Users, ShieldCheck,
-    PlayCircle, BarChart3,
-    Target, History, PieChart, Database,
-    ChevronDown, TrendingUp
+    Clock, Video, CheckCircle2,
+    ArrowRight, Globe, ShieldCheck,
+    BarChart3, LayoutGrid, Coins, PlayCircle,
+    TrendingUp, LineChart, Target, PieChart, Users
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { api } from '../lib/api';
+import { api, supabase } from '../lib/api';
 import { useCashfree } from '../hooks/useCashfree';
 
 export default function WebinarLanding() {
-    const [registered, setRegistered] = useState(false);
     const [formData, setFormData] = useState({ name: '', whatsapp: '', email: '' });
     const [isProcessing, setIsProcessing] = useState(false);
-    const [activeFaq, setActiveFaq] = useState<number | null>(null);
-    const { openMockCheckout } = useCashfree();
+    const { openCheckout } = useCashfree();
 
     // Configuration
     const BRAND_NAME = "Nivesh Link";
-    const WEBINAR_TITLE = "Smart Trading Blueprint";
     const WEBINAR_PRICE = 499;
-    const WEBINAR_DATE = "Sunday, April 6";
-    const WEBINAR_TIME = "11:00 AM IST";
-    const WEBINAR_DURATION = "90 Mins";
-    const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/Fr5ieLzdLICI85SLwVCKQI";
+    const WEBINAR_DATE = "Dec 14, 2025";
+    const WEBINAR_TIME = "11:00 AM";
 
     const handleRegister = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!formData.name || !formData.whatsapp) {
-            document.getElementById('booking-card')?.scrollIntoView({ behavior: 'smooth' });
+        
+        let target = document.getElementById('register');
+        if (!formData.name || !formData.whatsapp || !formData.email) {
+            target?.scrollIntoView({ behavior: 'smooth' });
+            target?.querySelector('input')?.focus();
             return;
         }
+
         setIsProcessing(true);
 
         try {
-            await openMockCheckout(WEBINAR_TITLE, WEBINAR_PRICE, async () => {
-                try {
-                    await api.webinar.register({
-                        name: formData.name,
-                        whatsapp: formData.whatsapp,
-                        email: formData.email,
-                        webinar_date: WEBINAR_DATE,
-                        status: 'PAID'
-                    });
-                    setRegistered(true);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } catch (err) {
-                    console.error('Registration failed:', err);
-                    alert('Payment successful, but we couldn\'t save your details. Please contact support.');
+            // 1. Create order securely from the edge function
+            const { data: orderData, error: orderError } = await supabase.functions.invoke('create-cashfree-order', {
+                body: { 
+                    amount: WEBINAR_PRICE,
+                    customer_details: {
+                        customer_name: formData.name,
+                        customer_phone: formData.whatsapp,
+                        customer_email: formData.email
+                    }
                 }
             });
-        } catch (err) {
-            console.error('Payment failed:', err);
+
+            if (orderError) throw new Error("Could not initialize payment. Please try again.");
+            if (!orderData || !orderData.payment_session_id) throw new Error(orderData?.message || "Missing payment session ID.");
+
+            // Also optionally log the intent in webinar_registrations before proceeding 
+            // Just so we don't lose them if they drop off
+            try {
+                await api.webinar.register({
+                    name: formData.name,
+                    whatsapp: formData.whatsapp,
+                    email: formData.email,
+                    lead_status: 'checkout_pending'
+                });
+            } catch (ignored) {} // fail silently so payment flow isn't blocked
+
+            // 2. Open Cashfree Checkout
+            await openCheckout({
+                amount: WEBINAR_PRICE,
+                orderId: orderData.order_id,
+                paymentSessionId: orderData.payment_session_id,
+                onFailure: (err) => {
+                    console.error("Payment failed or cancelled:", err);
+                    alert("Payment could not be completed. Please try again or contact support at 9372333879");
+                }
+            });
+
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            alert(err.message || 'Something went wrong. Please contact 9372333879');
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const faqs = [
-        { q: "Will I get the recording?", a: "Yes, all registered participants will receive the full HD recording of the session along with the blueprint PDF and notes." },
-        { q: "Is this for beginners?", a: "Absolutely. We start from the absolute basics of market ecosystem before moving into clinical strategies." },
-        { q: "What tools do I need?", a: "No paid tools are required. We teach using free charting platforms like TradingView." },
-        { q: "Are bonuses included in this price?", a: "Yes, all bonuses (worth ₹4,999) are included for no extra cost when you register today." }
-    ];
-
     return (
-        <div className="min-h-screen bg-[#000000] text-slate-200 font-sans selection:bg-emerald-500/30 overflow-x-hidden relative">
+        <div className="min-h-screen bg-[#050505] text-slate-200 font-body selection:bg-emerald-500/30 overflow-x-hidden relative">
             
-            {/* Header Mirroring Topmate */}
-            <header className="fixed top-0 left-0 right-0 z-[100] bg-black/60 backdrop-blur-xl border-b border-[#27272a]">
+            {/* Ambient Background Grid */}
+            <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 opacity-20">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(20,20,20,1)_1px,transparent_1px),linear-gradient(90deg,rgba(20,20,20,1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+            </div>
+
+            {/* Ambient Glow */}
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-900/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+
+            {/* Navbar */}
+            <header className="fixed top-0 left-0 right-0 z-[100] border-b border-[#1f1f1f] bg-[#050505]/80 backdrop-blur-xl">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/20">
-                            <TrendingUp className="text-white" size={20} />
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+                            <TrendingUp className="text-black" size={20} strokeWidth={2.5}/>
                         </div>
-                        <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight leading-none text-white">{BRAND_NAME}</h3>
-                            <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5 ml-0.5 italic">Wealth Academy</p>
-                        </div>
+                        <h3 className="text-xl font-bold text-white font-heading">{BRAND_NAME}</h3>
                     </div>
+                    
+                    <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
+                        <a href="#about" className="hover:text-white transition-colors">About</a>
+                        <a href="#curriculum" className="hover:text-white transition-colors">Curriculum</a>
+                        <a href="#benefits" className="hover:text-white transition-colors">Benefits</a>
+                    </nav>
+
+                    <button 
+                        onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-transform font-heading"
+                    >
+                        Register Now
+                    </button>
                 </div>
             </header>
 
-            {/* Ambient Background Glows */}
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[800px] h-[800px] bg-emerald-600/[0.04] blur-[150px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-sky-600/[0.03] blur-[180px] rounded-full" />
-            </div>
-
-            <main className="pt-32 pb-32 px-6 lg:px-12">
-                <div className="max-w-[1240px] mx-auto">
-                    
-                    {registered ? (
-                        /* SUCCESS STATE */
-                        <div className="max-w-xl mx-auto py-20 animate-in fade-in zoom-in duration-1000">
-                             <div className="bg-[#111114] border border-[#27272a] rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500/50 blur-[1px]" />
-                                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(16,185,129,0.4)]">
-                                    <CheckCircle2 size={40} className="text-white" />
-                                </div>
-                                <h1 className="text-3xl font-black text-white mb-4 tracking-tight uppercase italic">Booking Confirmed!</h1>
-                                <p className="text-slate-400 mb-10 font-bold uppercase tracking-[0.2em] text-[10px]">Your Blueprint awaits you</p>
-                                <a 
-                                    href={WHATSAPP_GROUP_LINK}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center justify-center gap-3 w-full py-6 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] transition-all shadow-xl"
-                                >
-                                    Join WhatsApp Group <ArrowRight size={18} />
-                                </a>
-                             </div>
-                        </div>
-                    ) : (
-                        /* TOTAL DESIGN MIRRORING LAYOUT */
-                        <div className="flex flex-col lg:flex-row gap-16 items-start">
-                            
-                            {/* LEFT COLUMN: MAIN CONTENT */}
-                            <div className="flex-1 space-y-16 lg:pr-12">
-                                
-                                {/* Hero Content */}
-                                <div className="space-y-8 text-center lg:text-left">
-                                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-[#27272a]">
-                                        <Sparkles size={14} className="text-emerald-400" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Nivesh Link Masterclass</span>
-                                    </div>
-                                    <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-[0.95] lg:-ml-1 uppercase italic">
-                                        Smart <br className="hidden md:block"/>
-                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-sky-400 to-emerald-500 italic">Trading.</span>
-                                    </h1>
-                                    <p className="text-xl md:text-2xl text-slate-400 leading-relaxed font-medium max-w-2xl mx-auto lg:mx-0">
-                                        The 90-minute roadmap to financial independence through clinical stock market strategies.
-                                    </p>
-                                    
-                                    {/* Social Proof Bar */}
-                                    <div className="flex items-center justify-center lg:justify-start gap-4 pt-4">
-                                        <div className="flex -space-x-3">
-                                            {[1, 2, 3, 4, 5].map(i => (
-                                                <div key={i} className="w-10 h-10 rounded-full border-2 border-[#000] bg-slate-800 shadow-xl ring-1 ring-white/10 overflow-hidden">
-                                                    <img src={`https://i.pravatar.cc/100?u=nivesh${i}`} alt="Trader" className="w-full h-full object-cover" />
-                                                </div>
-                                            ))}
-                                            <div className="w-10 h-10 rounded-full border-2 border-[#000] bg-emerald-600 flex items-center justify-center text-[10px] font-black text-white shadow-xl ring-1 ring-white/10">340+</div>
-                                        </div>
-                                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">Smart Traders Joined</span>
-                                    </div>
-                                </div>
-
-                                {/* What You'll Learn (8 Pillars) */}
-                                <div className="space-y-12 pt-8">
-                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight italic flex items-center gap-4">
-                                        <Target className="text-emerald-500" /> The 8 Pillars of Wealth Creation
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <CompactPillar icon={<History className="text-emerald-400"/>} title="Market Reality" desc="Why 90% lose money and how you can join the 10% elite." />
-                                        <MiniPillar icon={<Users className="text-emerald-400"/>} title="Ecosystem" desc="How institutional giants move the markets in their favor." />
-                                        <MiniPillar icon={<PieChart className="text-emerald-400"/>} title="Vehicles" desc="Selecting the right assets for your capital size and goals." />
-                                        <MiniPillar icon={<BarChart3 className="text-emerald-400"/>} title="Technical 5" desc="Internal checklist for identifying high-quality stock setups." />
-                                        <MiniPillar icon={<PlayCircle className="text-emerald-400"/>} title="Price Action" desc="Mastering clinical price movement without indicators." />
-                                        <MiniPillar icon={<Zap className="text-emerald-400"/>} title="Precision" desc="Execution framework for high-probability breakouts." />
-                                        <MiniPillar icon={<ShieldCheck className="text-emerald-400"/>} title="Risk Matrix" desc="Professional risk-management protocols for wealth safety." />
-                                        <MiniPillar icon={<Database className="text-emerald-400"/>} title="Journaling" desc="Using data to treat trading as a professional business." />
-                                    </div>
-                                </div>
-
-                                {/* About Section */}
-                                <div className="pt-20">
-                                    <div className="p-10 md:p-12 bg-[#111114] border border-[#27272a] rounded-[3.5rem] flex flex-col md:flex-row gap-12 items-center relative overflow-hidden group">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/5 blur-3xl rounded-full" />
-                                        <div className="w-40 h-40 rounded-[2.5rem] bg-emerald-600 flex items-center justify-center shrink-0 border-2 border-white/5 shadow-2xl transition-all duration-700">
-                                            <TrendingUp size={80} className="text-white" />
-                                        </div>
-                                        <div className="flex-1 space-y-6 text-center md:text-left">
-                                            <h4 className="text-2xl font-black text-white italic uppercase tracking-tight">About Nivesh Link</h4>
-                                            <p className="text-slate-400 text-sm leading-relaxed max-w-lg font-medium">
-                                                We demystify the stock market to provide jargon-free education that empowers you. Transform from a confused beginner into a confident, disciplined trader with our expert guidance.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* FAQ Accordion */}
-                                <div className="space-y-10 pb-40">
-                                     <h3 className="text-2xl font-black text-white uppercase tracking-tight italic">Frequently Asked</h3>
-                                     <div className="bg-[#111114] border border-[#27272a] rounded-[2.5rem] overflow-hidden divide-y divide-[#27272a]">
-                                        {faqs.map((faq, i) => (
-                                            <div key={i} className="group">
-                                                <button 
-                                                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                                                    className="w-full px-8 py-8 flex items-center justify-between hover:bg-white/[0.02] transition-all text-left"
-                                                >
-                                                    <span className={cn("text-sm font-bold transition-colors", activeFaq === i ? "text-emerald-400" : "text-slate-300 group-hover:text-white")}>{faq.q}</span>
-                                                    <ChevronDown size={18} className={cn("text-slate-600 transition-transform duration-300", activeFaq === i && "rotate-180 text-emerald-400")} />
-                                                </button>
-                                                {activeFaq === i && (
-                                                    <div className="px-8 pb-8 animate-in slide-in-from-top-4 fade-in duration-300">
-                                                        <p className="text-sm text-slate-500 leading-relaxed font-medium">{faq.a}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                     </div>
-                                </div>
-                            </div>
-
-                            {/* RIGHT COLUMN: STICKY BOOKING CARD */}
-                            <div className="w-full lg:w-[410px] lg:sticky lg:top-32 group">
-                                <div id="booking-card" className="bg-[#111114] border border-[#27272a] rounded-[2.5rem] p-8 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-700 hover:border-emerald-500/50">
-                                    {/* Accent Decoration */}
-                                    <div className="absolute -top-24 -right-24 w-52 h-52 bg-emerald-600/10 rounded-full blur-[80px] opacity-50 transition-all duration-700 group-hover:scale-150" />
-                                    
-                                    <div className="relative z-10 space-y-8">
-                                        <div className="flex items-center justify-between">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workshop Registration Fee</p>
-                                                <h4 className="text-4xl font-black text-white tracking-tight italic">₹{WEBINAR_PRICE}</h4>
-                                            </div>
-                                            <div className="p-4 bg-emerald-600/15 rounded-2xl flex items-center justify-center">
-                                                <Zap className="text-emerald-500 fill-emerald-500" size={24} />
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-5">
-                                            <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                                                <Calendar size={18} className="text-emerald-400" />
-                                                <span>{WEBINAR_DATE}</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                                                <Clock size={18} className="text-emerald-400" />
-                                                <span>{WEBINAR_TIME} • {WEBINAR_DURATION}</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                                                <Video size={18} className="text-emerald-400" />
-                                                <span>Secure Session Link</span>
-                                            </div>
-                                        </div>
-
-                                        <form className="space-y-5">
-                                            <div className="space-y-2.5">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Name</label>
-                                                <input 
-                                                    required
-                                                    type="text" 
-                                                    placeholder="Enter your name"
-                                                    className="w-full px-6 py-5 bg-[#000] border border-[#27272a] rounded-2xl text-white font-bold placeholder:text-slate-800 focus:outline-none focus:border-emerald-500/50 transition-all text-sm"
-                                                    value={formData.name}
-                                                    onChange={e => setFormData({...formData, name: e.target.value})}
-                                                />
-                                            </div>
-                                            <div className="space-y-2.5">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">WhatsApp Number</label>
-                                                <input 
-                                                    required
-                                                    type="tel" 
-                                                    placeholder="+91 ...."
-                                                    className="w-full px-6 py-5 bg-[#000] border border-[#27272a] rounded-2xl text-white font-bold placeholder:text-slate-800 focus:outline-none focus:border-emerald-500/50 transition-all text-sm"
-                                                    value={formData.whatsapp}
-                                                    onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-                                                />
-                                            </div>
-
-                                            <button 
-                                                type="button"
-                                                onClick={() => handleRegister()}
-                                                disabled={isProcessing}
-                                                className="w-full py-6 bg-white text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-xl disabled:opacity-50 mt-4 active:scale-95 flex items-center justify-center gap-3 italic"
-                                            >
-                                                {isProcessing ? 'Connecting...' : 'Secure My Seat Now'}
-                                                {!isProcessing && <ArrowRight size={14} />}
-                                            </button>
-                                        </form>
-
-                                        <div className="flex items-center justify-center gap-6 opacity-30 pt-4">
-                                            <div className="flex items-center gap-2">
-                                                <ShieldCheck size={14} />
-                                                <span className="text-[9px] font-bold uppercase tracking-widest text-white">Verified Secure Access</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </main>
-
-            {/* MOBILE STICKY CTA BAR */}
-            {!registered && (
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-black/90 backdrop-blur-2xl border-t border-white/5 z-50 animate-in slide-in-from-bottom-2 duration-500">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="pl-2">
-                             <p className="text-[8px] font-black uppercase text-emerald-500 tracking-widest mb-0.5">Live Webinar</p>
-                             <p className="text-xl font-black text-white">₹{WEBINAR_PRICE}</p>
-                        </div>
-                        <button 
-                            onClick={() => handleRegister()}
-                            className="bg-white text-black px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all shadow-xl italic"
-                        >
-                            Book Seat
-                        </button>
+            <main className="pt-40 pb-32 px-6 lg:px-12 max-w-7xl mx-auto space-y-40">
+                
+                {/* 1. HERO SECTION */}
+                <section className="text-center slide-in-from-bottom border-b border-[#1f1f1f]/50 pb-40">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-8">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> LIVE MASTERCLASS
                     </div>
-                </div>
-            )}
+                    
+                    <h1 className="text-5xl md:text-7xl font-bold text-white font-heading tracking-tight max-w-5xl mx-auto leading-[1.15]">
+                        The Ultimate <br className="hidden md:block" />
+                        <span className="text-emerald-500">Stock Market Blueprint</span>
+                    </h1>
+                    
+                    <p className="text-slate-400 text-lg md:text-xl font-body max-w-2xl mx-auto mt-8 leading-relaxed">
+                        Stop gambling. Start trading. A 90-minute roadmap <br className="hidden md:block"/>
+                        to turn market confusion into <span className="text-white font-bold">consistent confidence</span>.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-12">
+                        <button 
+                            onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="bg-emerald-500 text-white px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-emerald-400 transition-colors shadow-[0_0_40px_rgba(16,185,129,0.3)] hover:shadow-[0_0_60px_rgba(16,185,129,0.5)] group"
+                        >
+                            <span className="font-bold font-heading text-lg">Register for ₹{WEBINAR_PRICE}</span> 
+                            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/>
+                        </button>
+                        
+                        <div className="flex items-center gap-4">
+                            <div className="flex -space-x-3">
+                                <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-[#050505] flex items-center justify-center text-xs font-bold text-slate-300">JD</div>
+                                <div className="w-10 h-10 rounded-full bg-slate-700 border-2 border-[#050505] flex items-center justify-center text-xs font-bold text-slate-200">AS</div>
+                                <div className="w-10 h-10 rounded-full bg-slate-600 border-2 border-[#050505] flex items-center justify-center text-xs font-bold text-white">+99</div>
+                            </div>
+                            <span className="text-sm font-medium text-slate-400">Traders joined last session</span>
+                        </div>
+                    </div>
+                </section>
 
-            {/* Final Footer */}
-            <footer className="py-24 border-t border-[#27272a] bg-black text-center relative overflow-hidden">
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-950/20 blur-[100px] rounded-full pointer-events-none" />
-                 <p className="text-[10px] font-bold text-slate-800 uppercase tracking-[1em] ml-[1em]">{BRAND_NAME}</p>
+                {/* 2. WHY THIS WEBINAR & BOOKING CARD */}
+                <section id="about" className="flex flex-col lg:flex-row gap-16 items-center">
+                    {/* Left Column */}
+                    <div className="flex-1 space-y-10">
+                        <h2 className="text-4xl md:text-5xl font-bold text-white font-heading leading-tight tracking-tight">
+                            Tired of random YouTube videos that create <span className="text-emerald-500">more doubt</span> ?
+                        </h2>
+                        
+                        <div className="space-y-6">
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Most beginners lose money not because the market is rigged, but because they lack a structured approach. They jump from strategy to strategy, never mastering one.
+                            </p>
+                            
+                            <div className="border-l-4 border-emerald-500 pl-6 py-2">
+                                <p className="text-slate-200 text-lg leading-relaxed">
+                                    This 90-minute session cuts through the noise. No confusing jargon, no heavy theory—just a practical, step-by-step roadmap.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4">
+                            <div className="flex items-center gap-2 border border-[#222] bg-[#0a0a0a] rounded-full px-5 py-2.5 text-sm font-medium text-slate-300">
+                                <CheckCircle2 size={16} className="text-emerald-500" /> Beginner Friendly
+                            </div>
+                            <div className="flex items-center gap-2 border border-[#222] bg-[#0a0a0a] rounded-full px-5 py-2.5 text-sm font-medium text-slate-300">
+                                <CheckCircle2 size={16} className="text-emerald-500" /> Actionable Steps
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Right Column: Booking Card layout mirror */}
+                    <div className="w-full lg:w-[480px]">
+                        <div className="bg-[#0a0a0a] border border-[#222] rounded-3xl p-8 relative overflow-hidden group shadow-2xl">
+                            {/* Accent Glow on Hover */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                            
+                            <div className="flex justify-between items-start mb-10 relative z-10 border-b border-[#222] pb-8">
+                                <div>
+                                    <p className="text-emerald-500 text-xs font-bold uppercase tracking-widest mb-2 font-heading">NEXT SESSION</p>
+                                    <h3 className="text-3xl font-bold text-white font-heading">{WEBINAR_DATE}</h3>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2 font-heading">SUNDAY</p>
+                                    <h3 className="text-3xl font-bold text-white font-heading">{WEBINAR_TIME}</h3>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-6 mb-10 relative z-10">
+                                <div className="flex items-center gap-4 text-slate-300">
+                                    <Clock className="text-slate-500" size={20} />
+                                    <span className="font-medium">90 Minutes + Q&A</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-slate-300">
+                                    <Video className="text-slate-500" size={20} />
+                                    <span className="font-medium">Live on Zoom</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-slate-300">
+                                    <Globe className="text-slate-500" size={20} />
+                                    <span className="font-medium">Hindi + English Mix</span>
+                                </div>
+                            </div>
+
+                            <div id="register" className="space-y-4 relative z-10 p-6 bg-[#111] rounded-2xl border border-[#222]">
+                                <h4 className="text-sm font-bold text-white mb-2 font-heading">Secure your spot</h4>
+                                <input 
+                                    className="w-full bg-[#050505] border border-[#222] text-white px-4 py-3 rounded-lg text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                                    placeholder="Your Name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                />
+                                <input 
+                                    className="w-full bg-[#050505] border border-[#222] text-white px-4 py-3 rounded-lg text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                                    placeholder="Email Address"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                />
+                                <input 
+                                    className="w-full bg-[#050505] border border-[#222] text-white px-4 py-3 rounded-lg text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                                    placeholder="WhatsApp Number"
+                                    value={formData.whatsapp}
+                                    onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                                />
+                                <button 
+                                    onClick={handleRegister}
+                                    disabled={isProcessing}
+                                    className="w-full bg-white text-black py-4 rounded-xl font-bold font-heading mt-2 hover:bg-slate-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isProcessing ? 'Processing Payment...' : `Book Your Spot for ₹${WEBINAR_PRICE}`}
+                                </button>
+                                <p className="text-center text-[10px] text-slate-500 pt-2">
+                                    By booking, you agree to our terms. Secure payment via Cashfree.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. 8 PILLARS (WHAT THIS SESSION COVERS) */}
+                <section id="curriculum" className="space-y-16">
+                    <div className="text-center space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-bold text-white font-heading tracking-tight">What This Session Covers</h2>
+                        <p className="text-lg text-slate-400 max-w-xl mx-auto">We strip away the noise and focus on the 8 pillars of profitable trading.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <PillarCard icon={<Target/>} num="1" title="Reality Check" desc="Why most traders fail, hidden traps, and behavioural mistakes that blow up accounts." />
+                        <PillarCard icon={<LayoutGrid/>} num="2" title="Market Ecosystem" desc="How SEBI, Brokers, FIIs, and DIIs operate, and how big players drive movement." />
+                        <PillarCard icon={<Coins/>} num="3" title="Instruments" desc="Equity, F&O, Commodities, Debt. What they mean and which one builds real wealth." />
+                        <PillarCard icon={<BarChart3/>} num="4" title="Fundamental 5" desc="Business quality, Management, Moat, Growth triggers, and Risks simplified." />
+                        <PillarCard icon={<LineChart/>} num="5" title="Technical Basics" desc="Candlesticks, Trends, Support & Resistance, Price Action, and Volume." />
+                        <PillarCard icon={<TrendingUp/>} num="6" title="Breakout Strategy" desc="A clean, simple price-action strategy for high-probability entries." />
+                        <PillarCard icon={<ShieldCheck/>} num="7" title="Risk Management" desc="1% Rule, Position sizing, R:R framework, and capital protection." />
+                        <PillarCard icon={<PieChart/>} num="8" title="Trading Journal" desc="What to track and how your journal becomes your best mentor." />
+                    </div>
+                </section>
+
+                {/* 4. WHO & WHY */}
+                <section id="benefits" className="grid lg:grid-cols-2 gap-16">
+                    <div className="space-y-8">
+                        <h2 className="text-3xl font-bold text-white font-heading tracking-tight">Who This Webinar Is For</h2>
+                        <div className="space-y-4">
+                            <FeaturePill icon={<PlayCircle/>} text="Absolute beginners" />
+                            <FeaturePill icon={<Users/>} text="Students" />
+                            <FeaturePill icon={<Clock/>} text="Working professionals" />
+                            <FeaturePill icon={<TrendingUp/>} text="New traders" />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-8">
+                        <h2 className="text-3xl font-bold text-white font-heading tracking-tight">Why This Webinar Is Different</h2>
+                        <div className="bg-[#0a0a0a] border border-[#222] rounded-3xl p-8 space-y-8">
+                            <div className="flex gap-4">
+                                <div className="mt-1"><LayoutGrid className="text-emerald-500" size={24}/></div>
+                                <div>
+                                    <h4 className="text-white font-bold font-heading text-lg mb-1">Structured & Logical</h4>
+                                    <p className="text-slate-400 text-sm">No random tips. A complete system.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="mt-1"><Target className="text-emerald-500" size={24}/></div>
+                                <div>
+                                    <h4 className="text-white font-bold font-heading text-lg mb-1">Result Oriented</h4>
+                                    <p className="text-slate-400 text-sm">Focus on profit and capital protection.</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="mt-1"><Users className="text-emerald-500" size={24}/></div>
+                                <div>
+                                    <h4 className="text-white font-bold font-heading text-lg mb-1">Real Experience</h4>
+                                    <p className="text-slate-400 text-sm">Based on years of actual market trading.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+            
+            <footer className="border-t border-[#1f1f1f] bg-[#050505] py-12 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                            <TrendingUp className="text-black" size={16} strokeWidth={2.5}/>
+                        </div>
+                        <h3 className="text-lg font-bold text-white font-heading">{BRAND_NAME}</h3>
+                    </div>
+                    <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Nivesh Link. All rights reserved.</p>
+                </div>
             </footer>
         </div>
     );
 }
 
-function CompactPillar({ icon, title, desc }: any) {
+function PillarCard({ num, icon, title, desc }: any) {
     return (
-        <div className="flex gap-5 p-7 bg-[#111114] border border-[#27272a] rounded-[2rem] group hover:border-emerald-500/40 transition-all duration-500">
-            <div className="shrink-0 w-14 h-14 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-600/10 transition-all duration-500">
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-8 rounded-3xl hover:border-emerald-500/30 transition-colors group">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 mb-8 group-hover:scale-110 transition-transform">
                 {icon}
             </div>
-            <div className="space-y-1.5 pt-1">
-                <h5 className="font-black text-white uppercase tracking-tight text-sm italic leading-none">{title}</h5>
-                <p className="text-[13px] text-slate-500 leading-relaxed font-medium group-hover:text-slate-400 transition-colors">{desc}</p>
-            </div>
+            <h4 className="text-xl font-bold text-white mb-3 font-heading">{num}. {title}</h4>
+            <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
         </div>
     );
 }
 
-function MiniPillar({ icon, title, desc }: any) {
-    return <CompactPillar icon={icon} title={title} desc={desc} />;
+function FeaturePill({ icon, text }: any) {
+    return (
+        <div className="flex items-center gap-4 bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-5 hover:border-emerald-500/30 transition-colors">
+            <div className="text-emerald-500">
+                {icon}
+            </div>
+            <span className="text-white font-bold text-base font-heading">{text}</span>
+        </div>
+    );
 }
