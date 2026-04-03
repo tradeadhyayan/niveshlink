@@ -9,6 +9,7 @@ function App() {
       <Routes>
         {/* Main Landing Page (Topmate Replica) */}
         <Route path="/" element={<WebinarLanding />} />
+        <Route path="/webinar" element={<WebinarLanding />} />
         
         {/* Legacy Registry View */}
         <Route path="/admin" element={<AdminRegistry />} />
