@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    TrendingUp, ArrowRight, CheckCircle2, Clock, Video, 
-    Globe, ShieldCheck, Target, BarChart3, 
-    LayoutGrid, Lock, Star, ChevronDown, Users,
-    Zap, BookOpen, Microscope, Sparkles, HelpCircle, Gift, Plus, Minus
+    Calendar, Clock, CheckCircle2, Star, ShieldCheck, 
+    MessageSquare, ArrowRight, Share2, Award, 
+    Gift, Zap, Users, ChevronRight, Menu, X, Play,
+    TrendingUp, LayoutGrid, Lock, ChevronDown, BookOpen, Microscope, Sparkles, HelpCircle, Plus, Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../lib/api';
-import { useCashfree } from '../hooks/useCashfree';
+import { api, supabase } from '../lib/api';
+import useCashfree from '../hooks/useCashfree';
+import GlowBackground from '../components/GlowBackground';
 
 export default function WebinarLanding() {
+    const [isVisible, setIsVisible] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', whatsapp: '', email: '' });
     const [isProcessing, setIsProcessing] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -81,12 +84,10 @@ export default function WebinarLanding() {
     return (
         <div className="min-h-screen bg-[#020202] text-white font-body selection:bg-emerald-500/30 overflow-x-hidden relative">
             
+            <GlowBackground />
+            
             {/* Background Layers */}
             <div className="fixed inset-0 bg-grid opacity-10 pointer-events-none -z-10" />
-            <div className="fixed inset-0 bg-emerald-glow opacity-30 pointer-events-none -z-10" />
-            <div className="fixed inset-0 bg-blue-glow opacity-20 pointer-events-none -z-10" />
-            <div className="fixed inset-0 bg-rose-glow opacity-15 pointer-events-none -z-10" />
-            <div className="fixed inset-0 bg-amber-glow opacity-10 pointer-events-none -z-10" />
 
             {/* Navbar */}
             <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${scrolled ? 'bg-black/40 backdrop-blur-3xl border-b border-white/5 py-3' : 'bg-transparent py-8'}`}>
