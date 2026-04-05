@@ -1,74 +1,130 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --app-bg: #fdfdfd;
-  --app-text: #0f172a;
-  --app-text-muted: #64748b;
-  --app-accent: #10b981;
-  /* keeping emerald as accent */
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  background-color: #020202;
+  color: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #020202;
+}
+
+#root {
+  width: 100%;
 }
 
 @layer base {
   html {
-    color: var(--app-text);
-    font-size: 14px;
     scroll-behavior: smooth;
   }
-
-  body {
-    background-color: var(--app-bg);
-    color: var(--app-text);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.5s, color 0.5s;
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-body);
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-heading);
-    letter-spacing: -0.01em;
-  }
 }
 
-.glass-panel {
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+.font-heading {
+  font-family: 'Quicksand', sans-serif;
 }
 
-.glass-button {
-  background-color: rgba(16, 185, 129, 0.05);
+/* 🎨 Designer Grid (Sharper & Technical) */
+.bg-grid {
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.08) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(255,255,255,0.08) 1.5px, transparent 1.5px);
+}
+
+/* 🌈 Layered Ambient Glows */
+.bg-emerald-glow {
+  background: radial-gradient(circle at 50% 40%, rgba(16, 185, 129, 0.2) 0%, transparent 60%);
+}
+
+.bg-blue-glow {
+  background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+}
+
+.bg-purple-glow {
+  background: radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+}
+
+.bg-rose-glow {
+  background: radial-gradient(circle at 20% 80%, rgba(244, 63, 94, 0.15) 0%, transparent 50%);
+}
+
+.bg-amber-glow {
+  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.1) 0%, transparent 60%);
+}
+
+.text-gradient-emerald-blue {
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-amber-rose {
+  background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ✨ Glassmorphism 2.0 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(16, 185, 129, 0.1);
-  color: #059669;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.glass-button:hover {
-  background-color: #10b981;
-  color: white;
-  transform: translateY(-1px);
+.glow-emerald {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.glow-blue {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* Gradient Text */
+.text-gradient-emerald-blue {
+  background: linear-gradient(135deg, #10b981 30%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Urgency Bar Animation */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Layout Grid Animation */
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
 }

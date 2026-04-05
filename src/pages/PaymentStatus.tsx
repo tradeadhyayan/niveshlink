@@ -1,120 +1,151 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/api'; // Or your actual client
-import { CheckCircle2, XCircle, ArrowRight, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { CheckCircle2, XCircle, RefreshCcw, MessageCircle, Mail, Phone, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { supabase } from '../lib/api';
 
 export default function PaymentStatus() {
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-    const [status, setStatus] = useState<'loading' | 'success' | 'checking' | 'error'>('loading');
-    const [errorMessage, setErrorMessage] = useState('');
-
     const orderId = searchParams.get('order_id');
+    const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
+    const [orderDetails, setOrderDetails] = useState<any>(null);
+
+    const WHATSAPP_LINK = "https://chat.whatsapp.com/LBL0ZAATtM0FjkKHAKHSun?mode=gi_t";
+    const SUPPORT_PHONE = "9372333879";
+    const SUPPORT_EMAIL = "niveshlink.edu@gmail.com";
 
     useEffect(() => {
-        if (!orderId) {
-            setStatus('error');
-            setErrorMessage('No Order ID found in the URL. Please ensure you completed the payment flow.');
-            return;
+        if (orderId) {
+            checkStatus();
+        } else {
+            setStatus('failed');
         }
-        
-        verifyPayment(orderId);
     }, [orderId]);
 
-    const verifyPayment = async (orderId: string) => {
-        setStatus('checking');
+    const checkStatus = async () => {
         try {
-            const { data: responseData, error } = await supabase.functions.invoke('verify-payment', {
-                body: { order_id: orderId }
+            // Verify with Cashfree via Edge Function
+            const { data, error } = await supabase.functions.invoke('check-cashfree-order', {
+                body: { orderId }
             });
 
-            if (error) {
-                throw new Error("Unable to contact verification server: " + error.message);
-            }
+            if (error) throw error;
 
-            if (responseData?.error) {
-                throw new Error(responseData.error);
-            }
-
-            const isPaid = responseData?.order_status === 'PAID';
-            
-            if (isPaid) {
-                // Here you should ideally also update/insert the lead into DB
-                // Since user info is often passed in meta during checkout or 
-                // stored in a separate table prior to checkout.
-                // Assuming Nivesh Link webhook handles the actual DB insertion
-                // But if we must register them here, we can.
-                // Assuming `customer_details` can be extracted using the edge function or 
-                // the lead is inserted before checkout and we just update status to 'PAID'.
-                // Since this is a simple page, we just show success.
+            if (data.order_status === 'PAID') {
                 setStatus('success');
+                setOrderDetails(data);
+                // Update Supabase
+                await supabase
+                    .from('webinar_registrations')
+                    .update({ lead_status: 'enrolled', cf_payment_id: data.cf_payment_id })
+                    .eq('order_id', orderId);
             } else {
-                throw new Error(`Payment not completed. Status: ${responseData?.order_status || 'PENDING'}. Please try again.`);
+                setStatus('failed');
             }
-
-        } catch (err: any) {
-            console.error("Payment verification failed:", err);
-            setStatus('error');
-            setErrorMessage(err.message || 'Payment failed or was cancelled.');
+        } catch (err) {
+            console.error('Status check error:', err);
+            setStatus('failed');
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-slate-200 font-body flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-[#050505] to-[#050505]">
-            <div className="max-w-md w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-[2rem] p-10 shadow-2xl relative overflow-hidden text-center">
-                
-                {status === 'loading' || status === 'checking' ? (
-                    <div className="animate-in fade-in duration-500">
-                        <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mx-auto mb-6" />
-                        <h2 className="text-2xl font-bold text-white mb-2 font-heading">Verifying Payment...</h2>
-                        <p className="text-slate-400 text-sm">Please wait while we confirm your transaction securely with Cashfree.</p>
-                    </div>
-                ) : status === 'success' ? (
-                    <div className="animate-in zoom-in fade-in duration-500">
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500/50 blur-[1px]" />
-                        <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
-                            <CheckCircle2 size={40} className="text-emerald-500" />
+        <div className="min-h-screen bg-[#020202] text-white flex items-center justify-center p-6 relative overflow-hidden">
+            
+            {/* Designer Background Layering */}
+            <div className="fixed inset-0 bg-grid opacity-10 pointer-events-none -z-10" />
+            <div className="fixed inset-0 bg-emerald-glow opacity-30 pointer-events-none -z-10" />
+            <div className="fixed inset-0 bg-blue-glow opacity-20 pointer-events-none -z-10" />
+
+            <div className="max-w-md w-full relative z-10">
+                {status === 'loading' && (
+                    <div className="text-center space-y-12 animate-pulse">
+                        <div className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] mx-auto flex items-center justify-center">
+                            <RefreshCcw size={48} className="animate-spin text-emerald-500" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-4 tracking-tight font-heading">Booking Confirmed!</h1>
-                        <p className="text-slate-400 mb-8 font-medium text-sm">
-                            Your payment was successful. We will email you the session link and further instructions shortly.
-                        </p>
-                        <button 
-                            onClick={() => window.location.href = 'https://chat.whatsapp.com/Fr5ieLzdLICI85SLwVCKQI'}
-                            className="flex items-center justify-center gap-3 w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all shadow-xl"
-                        >
-                            Join WhatsApp Group <ArrowRight size={18} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="mt-4 text-xs font-semibold text-slate-500 hover:text-white transition-colors"
-                        >
-                            Back to Home
-                        </button>
-                    </div>
-                ) : (
-                    <div className="animate-in fade-in duration-500">
-                        <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(244,63,94,0.2)]">
-                            <XCircle size={40} className="text-rose-500" />
+                        <div className="space-y-4">
+                            <h2 className="text-4xl font-bold font-heading">Securing Order</h2>
+                            <p className="text-white/30 font-bold uppercase tracking-[0.2em] text-[10px]">Verifying with Nivesh Link Intelligence Systems</p>
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2 font-heading">Payment Failed</h2>
-                        <p className="text-rose-400 text-sm mb-6">{errorMessage}</p>
+                    </div>
+                )}
+
+                {status === 'success' && (
+                    <div className="space-y-10 animate-in fade-in zoom-in duration-700">
+                        <div className="text-center">
+                            <div className="w-28 h-28 bg-[#10b981] text-black rounded-[2.5rem] mx-auto flex items-center justify-center mb-10 shadow-[0_25px_60px_rgba(16,185,129,0.4)]">
+                                <CheckCircle2 size={56} strokeWidth={3} />
+                            </div>
+                            <span className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Authorization Successful</span>
+                            <h2 className="text-5xl font-bold font-heading mb-6 tracking-tight">Access Granted.</h2>
+                            <p className="text-white/40 text-lg leading-relaxed">Welcome to the inner circle. Your credentials are confirmed.</p>
+                        </div>
                         
-                        <div className="bg-[#111] border border-[#222] rounded-xl p-4 text-left mb-8">
-                            <p className="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wider">Need Help?</p>
-                            <p className="text-sm font-medium text-slate-300">If the amount was deducted or you are facing issues, contact us at:</p>
-                            <div className="mt-3 space-y-1">
-                                <p className="text-sm"><span className="text-emerald-500 font-semibold text-xs uppercase mr-2">Phone</span> <span className="font-bold text-white tracking-wide">9372333879</span></p>
-                                <p className="text-sm"><span className="text-emerald-500 font-semibold text-xs uppercase mr-2">Email</span> <span className="font-bold text-white tracking-wide">niveshlink.edu@gmail.com</span></p>
+                        <div className="glass-card rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-[40px] pointer-events-none" />
+                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/20">
+                                <span>Order Protocol</span>
+                                <span className="text-emerald-500 font-mono">{orderId}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="text-white/40 font-bold uppercase text-[10px] tracking-widest">Enrollment Fee</span>
+                                <span className="text-3xl font-bold font-heading text-gradient-emerald-blue">₹{orderDetails?.order_amount || '499'}</span>
                             </div>
                         </div>
 
-                        <button 
-                            onClick={() => navigate('/')}
-                            className="flex items-center justify-center gap-3 w-full py-4 bg-white text-black rounded-xl font-bold text-sm hover:bg-slate-200 transition-all shadow-xl"
-                        >
-                            Try Again
-                        </button>
+                        <div className="space-y-4">
+                             <a 
+                                href={WHATSAPP_LINK}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-[#25D366] text-white py-6 rounded-[1.8rem] font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:scale-[1.03] transition-all shadow-[0_20px_50px_rgba(37,211,102,0.3)] active:scale-95 group"
+                            >
+                                <MessageCircle size={24} /> Get Access Details
+                                <ArrowUpRight size={18} className="text-white/50 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                            </a>
+                            <Link to="/" className="block text-center text-white/20 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.4em] pt-8">
+                                Return to Intelligence Portal
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {status === 'failed' && (
+                    <div className="space-y-10 animate-in fade-in zoom-in duration-700">
+                        <div className="text-center">
+                            <div className="w-28 h-28 bg-rose-500 text-white rounded-[2.5rem] mx-auto flex items-center justify-center mb-10 shadow-[0_25px_60px_rgba(244,63,94,0.3)]">
+                                <XCircle size={56} strokeWidth={3} />
+                            </div>
+                            <span className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block">Verification Interface Failed</span>
+                            <h2 className="text-4xl font-bold font-heading mb-6 tracking-tight">Manual Action Required.</h2>
+                            <p className="text-white/40 text-lg">Our automated system could not verify this transaction.</p>
+                        </div>
+                        
+                        <div className="glass-card rounded-[2.5rem] p-10 space-y-8">
+                            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/20">
+                                <ShieldCheck size={14} /> Global Priority Support
+                            </div>
+                            <div className="space-y-6">
+                                <a href={`tel:${SUPPORT_PHONE}`} className="flex items-center gap-5 text-emerald-500 font-bold hover:text-emerald-400 transition-all group">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors"><Phone size={20} /></div>
+                                    <span className="text-xl tracking-tight">{SUPPORT_PHONE}</span>
+                                </a>
+                                <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-5 text-blue-400 font-bold hover:text-blue-300 transition-all group">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-400/5 flex items-center justify-center group-hover:bg-blue-400/10 transition-colors"><Mail size={20} /></div>
+                                    <span className="text-lg tracking-tight lowercase">{SUPPORT_EMAIL}</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-4">
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="w-full bg-white text-black py-6 rounded-[1.8rem] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-emerald-400 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)] active:scale-95"
+                            >
+                                <RefreshCcw size={18} /> Resync Status
+                            </button>
+                            <Link to="/" className="block text-center text-white/20 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.4em] pt-8">
+                                Terminal Reset
+                            </Link>
+                        </div>
                     </div>
                 )}
             </div>

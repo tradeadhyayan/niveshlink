@@ -8,13 +8,17 @@ export function useCashfree() {
         amount: number, 
         orderId: string, 
         paymentSessionId: string,
+        isProduction?: boolean, // Added dynamic mode support
         onSuccess?: () => void,
         onFailure?: (err: any) => void 
     }) => {
         setLoading(true);
         try {
+            const mode = options.isProduction ? "production" : "sandbox";
+            console.log(`[Cashfree] Initializing in ${mode} mode...`);
+
             const cashfree = await load({
-                mode: "sandbox" // Change to "production" for real payments
+                mode: mode as "production" | "sandbox"
             });
 
             const checkoutOptions = {
@@ -25,37 +29,22 @@ export function useCashfree() {
             const result = await cashfree.checkout(checkoutOptions);
 
             if (result.error) {
-                console.error("Cashfree Error:", result.error);
                 if (options.onFailure) options.onFailure(result.error);
                 return;
             }
 
             if (result.redirect) {
-                console.log("Redirecting to payment page...");
+                // Redirecting...
             } else if (options.onSuccess) {
                 options.onSuccess();
             }
         } catch (error) {
-            console.error("Cashfree Checkout Init Error:", error);
+            console.error("Cashfree error:", error);
             if (options.onFailure) options.onFailure(error);
         } finally {
             setLoading(false);
         }
     };
 
-    // Simplified mock version for local dev if backend isn't ready
-    const openMockCheckout = async (planName: string, amount: number, onSuccess: () => void) => {
-        setLoading(true);
-        const proceed = confirm(`[SANDBOX] Proceed to pay ₹${amount} for ${planName}?`);
-        if (proceed) {
-            setTimeout(() => {
-                setLoading(false);
-                onSuccess();
-            }, 1000);
-        } else {
-            setLoading(false);
-        }
-    };
-
-    return { openCheckout, openMockCheckout, loading };
+    return { openCheckout, loading };
 }

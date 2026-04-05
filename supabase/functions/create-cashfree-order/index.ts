@@ -34,7 +34,7 @@ serve(async (req) => {
                 customer_email: customer_details.customer_email || "no-email@niveshlink.com"
             },
             order_meta: order_meta || {
-                return_url: "https://niveshlink.com/payment-status?order_id={order_id}"
+                return_url: "https://niveshlink.vercel.app/payment-status?order_id={order_id}"
             }
         };
 
@@ -57,7 +57,7 @@ serve(async (req) => {
             throw new Error(`Cashfree error: ${data.message || 'Unknown error'}`);
         }
 
-        return new Response(JSON.stringify(data), {
+        return new Response(JSON.stringify({ ...data, is_production: IS_PRODUCTION }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
         });

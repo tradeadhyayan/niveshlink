@@ -1,26 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import WebinarLanding from './pages/WebinarLanding';
-import AdminRegistry from './pages/AdminRegistry';
+import AdminDashboard from './pages/AdminRegistry';
 import PaymentStatus from './pages/PaymentStatus';
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        {/* Main Landing Page (Topmate Replica) */}
         <Route path="/" element={<WebinarLanding />} />
-        <Route path="/webinar" element={<WebinarLanding />} />
-        
-        {/* Legacy Registry View */}
-        <Route path="/admin" element={<AdminRegistry />} />
-        
-        {/* Payment Callback */}
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/payment-status" element={<PaymentStatus />} />
-        
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
