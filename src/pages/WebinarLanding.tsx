@@ -3,11 +3,12 @@ import {
     Calendar, Clock, CheckCircle2, Star, ShieldCheck, 
     MessageSquare, ArrowRight, Share2, Award, 
     Gift, Zap, Users, ChevronRight, Menu, X, Play,
-    TrendingUp, LayoutGrid, Lock, ChevronDown, BookOpen, Microscope, Sparkles, HelpCircle, Plus, Minus
+    TrendingUp, LayoutGrid, Lock, ChevronDown, BookOpen, Microscope, Sparkles, HelpCircle, Plus, Minus,
+    Globe, BarChart3, Target
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, supabase } from '../lib/api';
-import useCashfree from '../hooks/useCashfree';
+import { useCashfree } from '../hooks/useCashfree';
 import GlowBackground from '../components/GlowBackground';
 
 export default function WebinarLanding() {
@@ -67,7 +68,7 @@ export default function WebinarLanding() {
                 onSuccess: () => {
                     // Redirect is handled by return_url
                 },
-                onFailure: (err) => {
+                onFailure: (err: any) => {
                     console.error("Payment failed:", err);
                     alert("Payment failed. Contact Support: 9372333879");
                 }
