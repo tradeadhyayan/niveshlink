@@ -48,6 +48,7 @@ export default function WebinarLanding() {
                 body: { 
                     amount: WEBINAR_PRICE,
                     customer_details: {
+                        customer_id: `cust_${Date.now()}_${formData.whatsapp}`,
                         customer_name: formData.name,
                         customer_phone: formData.whatsapp,
                         customer_email: formData.email || `${formData.whatsapp}@niveshlink.temp`
@@ -58,7 +59,15 @@ export default function WebinarLanding() {
                 }
             });
 
-            if (orderError) throw new Error("Could not initialize payment. Please try again.");
+            if (orderError) {
+                console.error("Supabase Function Error:", orderError);
+                const errorMsg = typeof orderError === 'object' ? JSON.stringify(orderError) : orderError;
+                throw new Error(`Payment Initiation Failed: ${errorMsg}`);
+            }
+
+            if (!orderData?.payment_session_id) {
+                throw new Error("No payment session received. Please check backend logs.");
+            }
 
             await openCheckout({
                 amount: WEBINAR_PRICE,
@@ -69,13 +78,13 @@ export default function WebinarLanding() {
                     // Redirect is handled by return_url
                 },
                 onFailure: (err: any) => {
-                    console.error("Payment failed:", err);
-                    alert("Payment failed. Contact Support: 9372333879");
+                    console.error("OpenCheckout Error:", err);
+                    alert(`Payment failed at checkout: ${err.message || JSON.stringify(err)}`);
                 }
             });
 
         } catch (err: any) {
-            console.error('Registration error:', err);
+            console.error('Final Registration Error:', err);
             alert(err.message || 'Something went wrong. Support: 9372333879');
         } finally {
             setIsProcessing(false);

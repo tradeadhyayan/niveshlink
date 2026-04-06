@@ -19,6 +19,11 @@ serve(async (req) => {
     }
 
     try {
+        if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+            console.error("Missing Cashfree Credentials in Edge Function Environment.");
+            throw new Error("Payment gateway configuration missing. Please set CASHFREE_APP_ID and CASHFREE_SECRET_KEY secrets.");
+        }
+
         const { amount, customer_details, order_meta } = await req.json();
 
         const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -38,6 +43,8 @@ serve(async (req) => {
             }
         };
 
+        console.log(`[Cashfree] Creating order ${orderId} for ${amount} INR...`);
+
         const response = await fetch(BASE_URL, {
             method: "POST",
             headers: {
@@ -47,14 +54,21 @@ serve(async (req) => {
                 "x-api-version": "2023-08-01",
                 "Accept": "application/json"
             },
-            body: JSON.stringify(orderPayload) // use the full payload including URLs config
+            body: JSON.stringify(orderPayload)
         });
 
-        const data = await response.json();
+        let data;
+        const responseText = await response.text();
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("Non-JSON response from Cashfree:", responseText);
+            throw new Error(`Cashfree server error: Invalid response format from gateway.`);
+        }
 
         if (!response.ok) {
             console.error("Cashfree API Error:", data);
-            throw new Error(`Cashfree error: ${data.message || 'Unknown error'}`);
+            throw new Error(`Cashfree error: ${data.message || 'Validation failed'}`);
         }
 
         return new Response(JSON.stringify({ ...data, is_production: IS_PRODUCTION }), {
@@ -63,7 +77,10 @@ serve(async (req) => {
         });
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        console.error("Edge Function Caught Error:", error.message);
+        return new Response(JSON.stringify({ 
+            error: error.message || "Internal server error during order creation" 
+        }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
         });
