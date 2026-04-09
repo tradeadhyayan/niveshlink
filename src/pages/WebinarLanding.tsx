@@ -259,28 +259,28 @@ export default function WebinarLanding() {
                             </div>
                             
                             {/* Form Side */}
-                            <div className="flex-1 p-10 md:p-14 space-y-10">
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-bold text-subtitle uppercase tracking-widest ml-1">Full Name</label>
+                            <div className="flex-1 p-8 md:p-10 space-y-8">
+                                <div className="space-y-5">
+                                    <div className="space-y-3">
+                                        <label className="text-[11px] font-bold text-subtitle uppercase tracking-widest ml-1">Your Full Name</label>
                                         <div className="relative group">
-                                            <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                            <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={18} />
                                             <input 
-                                                className="w-full bg-black/40 border border-white/10 text-white pl-16 pr-8 py-5 rounded-2xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-lg"
-                                                placeholder="Legal name for certificate"
+                                                className="w-full bg-black/40 border border-white/10 text-white pl-14 pr-6 py-4 rounded-xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-base"
+                                                placeholder="Enter your name"
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-bold text-subtitle uppercase tracking-widest ml-1">WhatsApp Number</label>
+                                    <div className="space-y-3">
+                                        <label className="text-[11px] font-bold text-subtitle uppercase tracking-widest ml-1">WhatsApp Number</label>
                                         <div className="relative group">
-                                            <MessageSquare className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                            <MessageSquare className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={18} />
                                             <input 
-                                                className="w-full bg-black/40 border border-white/10 text-white pl-16 pr-8 py-5 rounded-2xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-lg"
-                                                placeholder="For session link & updates"
+                                                className="w-full bg-black/40 border border-white/10 text-white pl-14 pr-6 py-4 rounded-xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-base"
+                                                placeholder="For session link"
                                                 value={formData.whatsapp}
                                                 onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                                             />
@@ -290,34 +290,30 @@ export default function WebinarLanding() {
                                     <button 
                                         onClick={handleRegister}
                                         disabled={isProcessing}
-                                        className="w-full bg-emerald-500 text-black py-6 rounded-2xl font-black text-xl hover:bg-emerald-400 transition-all active:scale-[0.98] disabled:opacity-50 mt-6 flex items-center justify-center gap-4 shadow-[0_20px_60px_rgba(16,185,129,0.3)]"
+                                        className="w-full bg-emerald-500 text-black py-5 rounded-xl font-black text-lg hover:bg-emerald-400 transition-all active:scale-[0.98] disabled:opacity-50 mt-4 flex items-center justify-center gap-4 shadow-[0_15px_40px_rgba(16,185,129,0.3)]"
                                     >
                                         {isProcessing ? (
                                             <>
-                                                <Zap className="animate-spin" size={24} />
-                                                Processing...
+                                                <Zap className="animate-spin" size={20} />
+                                                Setting things up...
                                             </>
                                         ) : (
                                             <>
-                                                Confirm Payment & Reserve
-                                                <ArrowRight size={24} />
+                                                Secure My Seat Now
+                                                <ArrowRight size={22} />
                                             </>
                                         )}
                                     </button>
                                 </div>
 
-                                <div className="flex flex-wrap justify-center gap-8 pt-10 border-t border-white/5 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                                <div className="flex flex-wrap justify-center gap-6 pt-8 border-t border-white/5 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
                                     <div className="flex items-center gap-2">
-                                        <ShieldCheck size={16} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">SSL Encrypted</span>
+                                        <ShieldCheck size={14} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">SSL Secure</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Lock size={16} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">PCI Compliant</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <CheckCircle2 size={16} />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Verified Merchant</span>
+                                        <Lock size={14} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Data Encrypted</span>
                                     </div>
                                 </div>
                             </div>
@@ -336,8 +332,8 @@ export default function WebinarLanding() {
                         <SimpleCard id="01" icon={<Zap/>} title="Reality Check" desc="Why most traders lose and how to avoid the hidden traps of the market." />
                         <SimpleCard id="02" icon={<Globe/>} title="Market Ecosystem" desc="Understanding how big institutions move price and where you fit in." />
                         <SimpleCard id="03" icon={<LayoutGrid/>} title="Instruments" desc="F&O vs Equity: Choosing the right vehicle for your specific capital size." />
-                        <SimpleCard id="04" icon={<Microscope/>} title="Fundamental 5" desc="The 5-step checklist to identify potential high-growth companies easily." />
-                        <SimpleCard id="05" icon={<BarChart3/>} title="Technical Basics" desc="Learning only what works: Price action, support, and resistance simplified." />
+                        <SimpleCard id="04" icon={<Microscope/>} title="Fundamental 5" desc="Learn 5 simple steps to find strong companies to invest in. (Types of Financial instruments and types of investment vehicle)" />
+                        <SimpleCard id="05" icon={<BarChart3/>} title="Technical Basics" desc="Master DIFFERENT TYPES OF CHARTS, Candlesticks pattern, dow theory, indicators. Price action and resistance simplified." />
                         <SimpleCard id="06" icon={<Target/>} title="Breakout Strategy" desc="The exact setup to enter high-confidence trades before price runs up." />
                         <SimpleCard id="07" icon={<ShieldCheck/>} title="Risk Management" desc="Protecting your capital. Never take a trade that can hurt your life." />
                         <SimpleCard id="08" icon={<BookOpen/>} title="Trading Journal" desc="The habit that builds wealth. How to track and learn from every trade." />
