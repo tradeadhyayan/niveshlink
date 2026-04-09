@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, XCircle, RefreshCcw, MessageCircle, Mail, Phone, ShieldCheck, ArrowUpRight } from 'lucide-react';
-import { supabase } from '../lib/api';
+import { api, supabase } from '../lib/api';
 
 export default function PaymentStatus() {
     const [searchParams] = useSearchParams();
@@ -23,12 +23,10 @@ export default function PaymentStatus() {
 
     const checkStatus = async () => {
         try {
-            // Verify with Cashfree via Edge Function
-            const { data, error } = await supabase.functions.invoke('check-cashfree-order', {
-                body: { orderId }
+            // Verify with Cashfree via Vercel API
+            const data = await api.webinar.checkCashfreeOrder({
+                orderId: orderId!
             });
-
-            if (error) throw error;
 
             if (data.order_status === 'PAID') {
                 setStatus('success');
@@ -36,7 +34,10 @@ export default function PaymentStatus() {
                 // Update Supabase
                 await supabase
                     .from('webinar_registrations')
-                    .update({ lead_status: 'enrolled', cf_payment_id: data.cf_payment_id })
+                    .update({ 
+                        lead_status: 'enrolled', 
+                        cf_payment_id: String(data.cf_payment_id || data.order_id)
+                    })
                     .eq('order_id', orderId);
             } else {
                 setStatus('failed');

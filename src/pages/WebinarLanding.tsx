@@ -44,26 +44,20 @@ export default function WebinarLanding() {
         setIsProcessing(true);
 
         try {
-            const { data: orderData, error: orderError } = await supabase.functions.invoke('create-cashfree-order', {
-                body: { 
-                    amount: WEBINAR_PRICE,
-                    customer_details: {
-                        customer_id: `cust_${Date.now()}_${formData.whatsapp}`,
-                        customer_name: formData.name,
-                        customer_phone: formData.whatsapp,
-                        customer_email: formData.email || `${formData.whatsapp}@niveshlink.temp`
-                    },
-                    order_meta: {
-                        return_url: `${window.location.origin}/payment-status?order_id={order_id}`
-                    }
-                }
+            // Use the new API helper to create a Cashfree order
+            const orderData = await api.webinar.createCashfreeOrder({
+                amount: WEBINAR_PRICE,
+                customer_details: {
+                    customer_id: `cust_${Date.now()}_${formData.whatsapp}`,
+                    customer_name: formData.name,
+                    customer_phone: formData.whatsapp,
+                    customer_email: formData.email || `${formData.whatsapp}@niveshlink.temp}`,
+                },
+                order_meta: {
+                    return_url: `${window.location.origin}/payment-status?order_id={order_id}`,
+                },
             });
-
-            if (orderError) {
-                console.error("Supabase Function Error:", orderError);
-                const errorMsg = typeof orderError === 'object' ? JSON.stringify(orderError) : orderError;
-                throw new Error(`Payment Initiation Failed: ${errorMsg}`);
-            }
+            // The helper throws on error, so we can proceed with orderData
 
             if (!orderData?.payment_session_id) {
                 throw new Error("No payment session received. Please check backend logs.");
@@ -158,7 +152,7 @@ export default function WebinarLanding() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-white/40 text-lg md:text-xl font-medium max-w-3xl mx-auto leading-relaxed mb-16 px-4 md:px-0"
+                        className="text-readable text-lg md:text-xl font-medium max-w-3xl mx-auto leading-relaxed mb-16 px-4 md:px-0"
                     >
                         Stop gambling. Start trading. A 90-minute roadmap <br className="hidden md:block" />
                         to turn market confusion into <span className="text-white">consistent confidence</span>.
@@ -189,7 +183,7 @@ export default function WebinarLanding() {
                                     +99
                                 </div>
                             </div>
-                            <p className="text-xs font-bold text-white/40">Join 850+ trained traders</p>
+                            <p className="text-xs font-bold text-subtitle">Join 850+ trained traders</p>
                         </div>
                     </motion.div>
                 </section>
@@ -206,7 +200,7 @@ export default function WebinarLanding() {
                         </div>
                         
                         <div className="space-y-8">
-                            <p className="text-white/40 text-xl leading-relaxed">
+                            <p className="text-readable text-xl leading-relaxed">
                                 Most beginners lose money not because the market is rigged, but because they **lack a structured approach**. They jump from strategy to strategy, never mastering one.
                             </p>
                             
@@ -218,47 +212,115 @@ export default function WebinarLanding() {
                         </div>
                     </div>
 
-                    <div id="register-section" className="glass-card rounded-[3rem] p-10 md:p-14 relative group">
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/20 blur-[80px] pointer-events-none group-hover:scale-150 transition-transform" />
+                    <div id="register-section" className="relative">
+                        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 blur-[120px] pointer-events-none" />
                         
-                        <div className="flex justify-between items-start mb-12 border-b border-white/5 pb-10">
-                            <div>
-                                <p className="text-white/20 text-xs font-bold uppercase tracking-wider mb-2">Confirmed Date</p>
-                                <h3 className="text-3xl font-bold font-heading">{WEBINAR_DATE_DISPLAY}</h3>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-white/20 text-xs font-bold uppercase tracking-wider mb-2">Starts At</p>
-                                <h3 className="text-3xl font-bold font-heading">{WEBINAR_TIME_DISPLAY}</h3>
-                            </div>
-                        </div>
+                        <div className="glass-card rounded-[3.5rem] overflow-hidden flex flex-col xl:flex-row shadow-2xl border-white/10">
+                            {/* Slot Info Side */}
+                            <div className="xl:w-2/5 p-10 md:p-14 bg-white/5 border-r border-white/5">
+                                <div className="space-y-10">
+                                    <div className="space-y-2">
+                                        <p className="text-emerald-500 text-xs font-black uppercase tracking-[0.2em]">Official Slot Booking</p>
+                                        <h3 className="text-4xl font-bold font-heading">Secure Your <br />Expert Access</h3>
+                                    </div>
 
-                        <div className="space-y-4 bg-white/5 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-white/5">
-                            <div className="flex items-center justify-center gap-3 mb-6 bg-emerald-500/10 py-2 rounded-full">
-                                <Lock size={14} className="text-emerald-500" />
-                                <p className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">100% Secure Checkout</p>
+                                    <div className="space-y-6">
+                                        <div className="slot-option selected">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Calendar className="text-emerald-500" size={18} />
+                                                    <span className="font-bold text-lg">{WEBINAR_DATE_DISPLAY}</span>
+                                                </div>
+                                                <CheckCircle2 className="text-emerald-500" size={18} />
+                                            </div>
+                                            <div className="flex items-center gap-3 text-subtitle text-sm">
+                                                <Clock size={16} />
+                                                <span>{WEBINAR_TIME_DISPLAY} (Live Session)</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-subtitle">Webinar Fee</span>
+                                                <span className="font-bold">₹{WEBINAR_PRICE}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-subtitle">Booking Status</span>
+                                                <span className="text-emerald-500 font-bold">Fast Filling 🔥</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 text-dimmed text-xs font-bold uppercase tracking-widest">
+                                        <ShieldCheck size={16} className="text-emerald-500" />
+                                        <span>Certified Training Program</span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <input 
-                                className="w-full bg-black/40 border border-white/10 text-white px-6 md:px-8 py-4 md:py-5 rounded-xl md:rounded-2xl focus:border-emerald-500/50 outline-none transition-all placeholder:text-white/20 font-medium text-base md:text-lg"
-                                placeholder="Enter Your Name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            />
-                            <input 
-                                className="w-full bg-black/40 border border-white/10 text-white px-6 md:px-8 py-4 md:py-5 rounded-xl md:rounded-2xl focus:border-emerald-500/50 outline-none transition-all placeholder:text-white/20 font-medium text-base md:text-lg"
-                                placeholder="Enter WhatsApp Number"
-                                value={formData.whatsapp}
-                                onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                            />
-                            <button 
-                                onClick={handleRegister}
-                                disabled={isProcessing}
-                                className="w-full bg-[#10b981] text-white py-5 md:py-6 rounded-xl md:rounded-[1.5rem] font-bold text-lg md:text-xl hover:bg-emerald-400 transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(16,185,129,0.3)]"
-                            >
-                                {isProcessing ? 'Connecting...' : 'Secure My Spot Now'}
-                                <ChevronDown size={20} />
-                            </button>
-                            <p className="text-center text-[10px] font-bold text-white/20 uppercase tracking-widest mt-4">No risk. 100% Satisfaction Guaranteed.</p>
+                            {/* Form Side */}
+                            <div className="flex-1 p-10 md:p-14 space-y-10">
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-subtitle uppercase tracking-widest ml-1">Full Name</label>
+                                        <div className="relative group">
+                                            <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                            <input 
+                                                className="w-full bg-black/40 border border-white/10 text-white pl-16 pr-8 py-5 rounded-2xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-lg"
+                                                placeholder="Legal name for certificate"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-subtitle uppercase tracking-widest ml-1">WhatsApp Number</label>
+                                        <div className="relative group">
+                                            <MessageSquare className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                                            <input 
+                                                className="w-full bg-black/40 border border-white/10 text-white pl-16 pr-8 py-5 rounded-2xl focus:border-emerald-500 outline-none transition-all placeholder:text-white/10 text-lg"
+                                                placeholder="For session link & updates"
+                                                value={formData.whatsapp}
+                                                onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={handleRegister}
+                                        disabled={isProcessing}
+                                        className="w-full bg-emerald-500 text-black py-6 rounded-2xl font-black text-xl hover:bg-emerald-400 transition-all active:scale-[0.98] disabled:opacity-50 mt-6 flex items-center justify-center gap-4 shadow-[0_20px_60px_rgba(16,185,129,0.3)]"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <Zap className="animate-spin" size={24} />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Confirm Payment & Reserve
+                                                <ArrowRight size={24} />
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-wrap justify-center gap-8 pt-10 border-t border-white/5 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck size={16} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">SSL Encrypted</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Lock size={16} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">PCI Compliant</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 size={16} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Verified Merchant</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -267,7 +329,7 @@ export default function WebinarLanding() {
                 <section id="curriculum" className="mb-64">
                     <div className="text-center mb-24">
                         <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6">The 8 Pillars of Mastery</h2>
-                        <p className="text-white/30 text-lg">A logic-based system designed for absolute beginners.</p>
+                        <p className="text-subtitle text-lg">A logic-based system designed for absolute beginners.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -296,7 +358,7 @@ export default function WebinarLanding() {
                                     Get Extras Worth <br />
                                     <span className="text-gradient-amber-rose">₹5,000</span> for FREE!
                                 </h2>
-                                <p className="text-white/40 text-xl leading-relaxed font-medium">
+                                <p className="text-readable text-xl leading-relaxed font-medium">
                                     Register before the session and unlock our elite membership toolkit to accelerate your learning.
                                 </p>
                             </div>
@@ -353,7 +415,7 @@ export default function WebinarLanding() {
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: "auto", opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="px-8 pb-8 text-white/40 leading-relaxed font-medium"
+                                            className="px-8 pb-8 text-readable leading-relaxed font-medium"
                                         >
                                             {item.a}
                                         </motion.div>
@@ -386,12 +448,12 @@ export default function WebinarLanding() {
                                 </div>
                                 <span className="text-3xl font-bold font-heading tracking-tight">{BRAND_NAME}</span>
                             </div>
-                            <p className="text-white/20 text-sm leading-relaxed max-w-xs mx-auto md:mx-0">Empowering everyday people with professional-grade trading wisdom.</p>
+                            <p className="text-subtitle text-sm leading-relaxed max-w-xs mx-auto md:mx-0">Empowering everyday people with professional-grade trading wisdom.</p>
                         </div>
                         
                         <div className="space-y-8 text-center md:text-left">
                             <h4 className="text-emerald-500 font-bold uppercase tracking-widest text-xs">Priority Help</h4>
-                            <div className="space-y-4 text-white/40 font-semibold">
+                            <div className="space-y-4 text-readable font-semibold">
                                 <p className="flex items-center justify-center md:justify-start gap-3 hover:text-white transition-colors cursor-default">
                                     <Phone size={16} className="text-emerald-500/50" /> 9372333879
                                 </p>
@@ -429,7 +491,7 @@ function SimpleCard({ id, icon, title, desc }: any) {
             </div>
             <div className="text-xs font-bold text-white/10 mb-2 uppercase tracking-widest">{id}</div>
             <h4 className="text-2xl font-bold font-heading mb-4 leading-tight">{title}</h4>
-            <p className="text-white/30 text-base leading-relaxed font-medium">{desc}</p>
+            <p className="text-subtitle text-base leading-relaxed font-medium">{desc}</p>
         </div>
     );
 }
@@ -441,7 +503,7 @@ function DiffCard({ icon, title, desc }: any) {
                 {icon}
             </div>
             <h4 className="text-2xl font-bold font-heading text-white">{title}</h4>
-            <p className="text-white/30 leading-relaxed font-medium">{desc}</p>
+            <p className="text-subtitle leading-relaxed font-medium">{desc}</p>
         </div>
     );
 }
@@ -469,7 +531,7 @@ function BonusItem({ title, value, desc, color = "emerald" }: any) {
                     <CheckCircle2 className={`text-${color}-500`} size={18} />
                     <h4 className="font-bold text-lg md:text-xl">{title}</h4>
                 </div>
-                <p className="text-white/30 font-medium text-xs md:text-sm pl-7">{desc}</p>
+                <p className="text-subtitle font-medium text-xs md:text-sm pl-7">{desc}</p>
             </div>
             <div className={`px-6 py-2 rounded-full border ${colorClasses[color]} font-black text-sm shrink-0 self-start md:self-center group-hover:scale-105 transition-transform`}>
                 FREE {value}

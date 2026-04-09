@@ -37,6 +37,31 @@ export const api = {
         delete: async (id: string) => {
             const { error } = await supabase.from('webinar_registrations').delete().eq('id', id);
             if (error) throw error;
+        },
+        // New helper to create Cashfree order via Vercel function
+        createCashfreeOrder: async (payload: { amount: number; customer_details: any; order_meta?: any }) => {
+            const response = await fetch('/api/create-cashfree-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Payment initiation failed');
+            }
+            return data;
+        },
+        checkCashfreeOrder: async (payload: { orderId: string }) => {
+            const response = await fetch('/api/check-cashfree-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Payment verification failed');
+            }
+            return data;
         }
     },
     tasks: { getAll: async () => [] },
