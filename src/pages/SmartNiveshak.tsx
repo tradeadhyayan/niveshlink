@@ -183,12 +183,12 @@ const SmartNiveshak = () => {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <CurriculumModule title="Market Introduction" items={["Asset classes overview", "The power of equity", "Market players", "Sensex & Nifty basics", "Corporate actions"]} />
-                        <CurriculumModule title="Technical Basics" items={["Intro to TA", "Chart types simplified", "Basic indicators", "Price movement logic"]} />
-                        <CurriculumModule title="Fundamental Basics" items={["Quality vs Quantity", "Management analysis", "Key ratios for beginners", "Growth potential"]} />
-                        <CurriculumModule title="Derivatives Intro" items={["What are derivatives?", "Basic options logic", "Commodity市场 overview"]} />
-                        <CurriculumModule title="Risk Mastery" items={["Risk profiling", "Entry rules for safety", "Position sizing", "Trading psychology"]} />
-                        <CurriculumModule title="Wealth Management" items={["Wealth creation tips", "Asset allocation", "Power of compounding", "Long-term planning"]} />
+                        <CurriculumModule title="1. Basics of Finance" items={["Why everyone should invest?", "Inflation & purchasing power", "Power of compounding", "Financial goal setting"]} />
+                        <CurriculumModule title="2. Asset Classes" items={["Equity overview", "Debt & Fixed income", "Gold & Commodities", "Real Estate basics"]} />
+                        <CurriculumModule title="3. Market Structure" items={["NSE & BSE exchange logic", "The role of SEBI", "Market participants", "Trading vs Demat accounts"]} />
+                        <CurriculumModule title="4. Fundamental Analysis" items={["Introduction to PE Ratio", "Face Value & Book Value", "Dividends & Bonus shares", "Reading balance sheets"]} />
+                        <CurriculumModule title="5. Technical Analysis" items={["Support & Resistance", "Trendlines & Channels", "Volume analysis", "Basic candlestick patterns"]} />
+                        <CurriculumModule title="6. Trading Psychology" items={["Emotional discipline", "Risk management rules", "Building a routine", "Market cycles"]} />
                     </div>
                 </section>
 

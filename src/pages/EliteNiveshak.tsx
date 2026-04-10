@@ -186,40 +186,28 @@ const EliteNiveshak = () => {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <CurriculumModule 
-                            title="Basic Finance & Structure"
-                            items={["Primary & secondary markets", "IPO process", "Mutual funds", "Market terminologies"]}
+                            title="1. Advanced Market Dynamics"
+                            items={["Supply & Demand zones", "Institutional liquidity logic", "Market sentiment analysis", "Inter-market correlations"]}
                         />
                         <CurriculumModule 
-                            title="Economics & Impact"
-                            items={["Macroeconomics fundamentals", "Inflation & interest rates", "Fiscal & monetary policy", "Economic cycles"]}
+                            title="2. Institutional Order Flow"
+                            items={["Reading tape & volume profile", "Large player footprints", "Accumulation & Distribution", "Stop hunting patterns"]}
                         />
                         <CurriculumModule 
-                            title="Industry & Company"
-                            items={["Sector rotation", "Quantitative metrics", "Qualitative moats", "Ratio & valuation analysis"]}
+                            title="3. Multi-Timeframe Analysis"
+                            items={["Top-down approach", "Fractional market theory", "Entry vs Curve timeframes", "High probability alignment"]}
                         />
                         <CurriculumModule 
-                            title="Strategy Formation"
-                            items={["Niveshak Link Logic", "High probability zones", "Trend identification", "Entry & exit rules"]}
+                            title="4. Hedging Strategies with F&O"
+                            items={["Options Greeks mastery", "Delta neutral positioning", "Spread strategies", "Protective puts & calls"]}
                         />
                         <CurriculumModule 
-                            title="Advanced Technicals"
-                            items={["Candlestick mastery", "Indicators & oscillators", "Pro setups", "Journaling habits"]}
+                            title="5. Complex Chart Patterns"
+                            items={["Advanced Harmonic patterns", "Price action refinement", "Failed pattern logic", "Time-based setups"]}
                         />
                         <CurriculumModule 
-                            title="Derivatives & Options"
-                            items={["Options & Greeks", "Open interest analysis", "Delta neutral introduction", "Hedging basics"]}
-                        />
-                        <CurriculumModule 
-                            title="Commodity & Screeners"
-                            items={["Commodity classification", "Inter-market impact", "Stock screener setup", "Personal filters"]}
-                        />
-                        <CurriculumModule 
-                            title="Advanced Risk"
-                            items={["Risk profiling", "Capital protection rules", "Using options for safety", "Portfolio sizing"]}
-                        />
-                        <CurriculumModule 
-                            title="Professional Planning"
-                            items={["Trading goal setting", "Personal trade plan", "Doubt clearing", "Community discussion"]}
+                            title="6. Risk Management for Large Capital"
+                            items={["Portfolio diversification", "Position sizing for millions", "drawdown protection", "Elite mindset & journaling"]}
                         />
                     </div>
                 </section>

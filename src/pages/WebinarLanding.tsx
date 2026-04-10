@@ -4,11 +4,12 @@ import {
     MessageSquare, ArrowRight, Share2, Award, 
     Gift, Zap, Users, ChevronRight, Menu, X, Play,
     TrendingUp, LayoutGrid, Lock, ChevronDown, BookOpen, Microscope, Sparkles, HelpCircle, Plus, Minus,
-    Globe, BarChart3, Target
+    Globe, BarChart3, Target, Crown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, supabase } from '../lib/api';
 import { useCashfree } from '../hooks/useCashfree';
+import { Link } from 'react-router-dom';
 import GlowBackground from '../components/GlowBackground';
 
 export default function WebinarLanding() {
@@ -21,8 +22,8 @@ export default function WebinarLanding() {
     const { openCheckout } = useCashfree();
 
     const BRAND_NAME = "Nivesh Link";
-    const WEBINAR_PRICE = 499;
-    const WEBINAR_DATE_DISPLAY = "April 11, 2026";
+    const WEBINAR_PRICE = 49;
+    const WEBINAR_DATE_DISPLAY = "April 18, 2026";
     const WEBINAR_TIME_DISPLAY = "11:00 AM";
 
     useEffect(() => {
@@ -32,6 +33,30 @@ export default function WebinarLanding() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const targetDate = new Date("2026-04-18T11:00:00").getTime();
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+
+            if (difference < 0) {
+                clearInterval(interval);
+                return;
+            }
+
+            setTimeLeft({
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+                seconds: Math.floor((difference % (1000 * 60)) / 1000)
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [targetDate]);
 
     const handleRegister = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -95,7 +120,7 @@ export default function WebinarLanding() {
 
             {/* Navbar */}
             <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${scrolled ? 'bg-black/40 backdrop-blur-3xl border-b border-white/5 py-3' : 'bg-transparent py-8'}`}>
-                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
                     <div className="flex items-center gap-4 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                         <div className="w-10 h-10 bg-[#10b981] rounded-xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                             <TrendingUp className="text-black" size={20} strokeWidth={3}/>
@@ -106,6 +131,7 @@ export default function WebinarLanding() {
                     <div className="hidden md:flex gap-10 items-center text-sm font-semibold text-white/50">
                         <a href="#about" className="hover:text-emerald-400 transition-colors">Origins</a>
                         <a href="#curriculum" className="hover:text-blue-400 transition-colors">Blueprint</a>
+                        <Link to="/courses/smart-niveshak" className="hover:text-blue-400 transition-colors">Courses</Link>
                         <a href="#bonuses" className="hover:text-amber-400 transition-colors">Bonuses</a>
                         <a href="#faq" className="hover:text-purple-400 transition-colors">FAQ</a>
                         <button 
@@ -126,7 +152,7 @@ export default function WebinarLanding() {
                 </div>
             </nav>
 
-            <main className="pt-48 max-w-7xl mx-auto px-6">
+            <main className="pt-32 md:pt-48 max-w-7xl mx-auto px-6">
                 
                 {/* Hero Section */}
                 <section className="text-center mb-64 relative">
@@ -136,13 +162,26 @@ export default function WebinarLanding() {
                         className="glass-pill inline-flex items-center gap-3 px-6 py-2 rounded-full text-xs font-bold mb-10 text-emerald-500"
                     >
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,1)]" /> 
-                        Live Masterclass
+                        Registration Closing Soon
+                    </motion.div>
+
+                    {/* ⏳ Digital Countdown Timer */}
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex justify-center gap-4 md:gap-8 mb-16"
+                    >
+                        <TimeBox value={timeLeft.days} label="Days" color="emerald" />
+                        <TimeBox value={timeLeft.hours} label="Hours" color="blue" />
+                        <TimeBox value={timeLeft.minutes} label="Mins" color="purple" />
+                        <TimeBox value={timeLeft.seconds} label="Secs" color="rose" />
                     </motion.div>
                     
                     <motion.h1 
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-4xl md:text-[5rem] font-bold font-heading tracking-tight leading-[1.1] mb-10 max-w-5xl mx-auto px-4 md:px-0"
+                        className="text-4xl md:text-[5.5rem] font-bold font-heading tracking-tight leading-[1.1] mb-10 max-w-5xl mx-auto px-4 md:px-0 mt-8 md:mt-0"
                     >
                         The Ultimate <br />
                         <span className="text-gradient-emerald-blue text-5xl md:text-[6rem]">Stock Market Blueprint</span>
@@ -166,10 +205,13 @@ export default function WebinarLanding() {
                     >
                         <button 
                             onClick={() => document.getElementById('register-section')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="bg-[#10b981] text-white px-8 md:px-12 py-5 md:py-6 rounded-2xl md:rounded-[2rem] font-bold text-xl md:text-2xl flex items-center gap-4 hover:bg-emerald-400 transition-all shadow-[0_20px_80px_rgba(16,185,129,0.3)] hover:translate-y-[-6px] active:scale-95 group relative overflow-hidden"
+                            className="bg-[#10b981] text-black px-10 md:px-16 py-6 md:py-8 rounded-2xl md:rounded-[2.5rem] font-black text-2xl md:text-3xl flex flex-col items-center gap-1 hover:bg-[#34d399] transition-all shadow-[0_20px_80px_rgba(16,185,129,0.4)] hover:translate-y-[-8px] active:scale-95 group relative overflow-hidden"
                         >
-                            Register for ₹{WEBINAR_PRICE}
-                            <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
+                            <div className="flex items-center gap-4">
+                                Join Masterclass for ₹{WEBINAR_PRICE}
+                                <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform" />
+                            </div>
+                            <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] opacity-60 font-bold">Limited Slots Available • One-Time Offer</span>
                         </button>
 
                          <div className="flex items-center gap-6 glass-pill px-8 py-4 rounded-3xl">
@@ -188,6 +230,62 @@ export default function WebinarLanding() {
                     </motion.div>
                 </section>
 
+                {/* 🔥 The Transformation: From Confusion to Clarity */}
+                <section id="transformation" className="mb-64">
+                    <div className="text-center mb-20 space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading">The Trading Evolution</h2>
+                        <p className="text-white/30 text-xs font-black uppercase tracking-[0.4em]">From Amateur to Institutional Logic</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {/* Before: The Struggle */}
+                        <div className="glass-card rounded-[3.5rem] p-12 border-rose-500/10 bg-rose-500/5 space-y-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[60px] pointer-events-none" />
+                            <div className="flex items-center gap-4 text-rose-500 font-black uppercase tracking-widest text-xs">
+                                <X size={16} /> The Confusion Phase
+                            </div>
+                            <h3 className="text-3xl font-bold font-heading">Gambling with Knowledge</h3>
+                            <ul className="space-y-6">
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0" />
+                                    Jumping from one YouTube "magic" strategy to another.
+                                </li>
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0" />
+                                    No clear entry or exit logic—trading on "hope".
+                                </li>
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0" />
+                                    Emotional rollercoasters with every price movement.
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* After: The Clarity */}
+                        <div className="glass-card rounded-[3.5rem] p-12 border-emerald-500/10 bg-emerald-500/5 space-y-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[60px] pointer-events-none" />
+                            <div className="flex items-center gap-4 text-emerald-500 font-black uppercase tracking-widest text-xs">
+                                <CheckCircle2 size={16} /> The Professional Phase
+                            </div>
+                            <h3 className="text-3xl font-bold font-heading">Trading with Blueprint</h3>
+                            <ul className="space-y-6">
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                                    Executing a structured, logic-based roadmap.
+                                </li>
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                                    Capital protection first. Profit is a byproduct of logic.
+                                </li>
+                                <li className="flex items-start gap-4 text-readable font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                                    Emotional independence and professional discipline.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
                 {/* Accuracy Content - Tired of YouTube */}
                 <section id="about" className="grid lg:grid-cols-2 gap-24 items-center mb-64">
                     <div className="space-y-12">
@@ -200,13 +298,13 @@ export default function WebinarLanding() {
                         </div>
                         
                         <div className="space-y-8">
-                            <p className="text-readable text-xl leading-relaxed">
-                                Most beginners lose money not because the market is rigged, but because they **lack a structured approach**. They jump from strategy to strategy, never mastering one.
+                            <p className="text-readable text-xl leading-relaxed font-medium">
+                                Most beginners lose money because they **lack a structured approach**. They jump from strategy to strategy, never mastering one. 
                             </p>
                             
-                            <div className="bg-emerald-500/10 border-l-4 border-emerald-500 p-8 rounded-r-2xl">
+                            <div className="bg-emerald-500/10 border-l-4 border-emerald-500/30 p-8 rounded-r-2xl">
                                 <p className="text-emerald-500 text-lg font-bold">
-                                    This 90-minute session cuts through the noise. No confusing jargon, no heavy theory—just a practical, step-by-step roadmap.
+                                    This 90-minute session is your first step towards institutional logic. No jargon—just a practical roadmap.
                                 </p>
                             </div>
                         </div>
@@ -329,14 +427,158 @@ export default function WebinarLanding() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <SimpleCard id="01" icon={<Zap/>} title="Reality Check" desc="Why most traders lose and how to avoid the hidden traps of the market." />
-                        <SimpleCard id="02" icon={<Globe/>} title="Market Ecosystem" desc="Understanding how big institutions move price and where you fit in." />
-                        <SimpleCard id="03" icon={<LayoutGrid/>} title="Instruments" desc="F&O vs Equity: Choosing the right vehicle for your specific capital size." />
-                        <SimpleCard id="04" icon={<Microscope/>} title="Fundamental 5" desc="Learn 5 simple steps to find strong companies to invest in. (Types of Financial instruments and types of investment vehicle)" />
-                        <SimpleCard id="05" icon={<BarChart3/>} title="Technical Basics" desc="Master DIFFERENT TYPES OF CHARTS, Candlesticks pattern, dow theory, indicators. Price action and resistance simplified." />
-                        <SimpleCard id="06" icon={<Target/>} title="Breakout Strategy" desc="The exact setup to enter high-confidence trades before price runs up." />
-                        <SimpleCard id="07" icon={<ShieldCheck/>} title="Risk Management" desc="Protecting your capital. Never take a trade that can hurt your life." />
-                        <SimpleCard id="08" icon={<BookOpen/>} title="Trading Journal" desc="The habit that builds wealth. How to track and learn from every trade." />
+                        <SimpleCard id="01" icon={<Zap/>} title="Reality Check" desc="Why most traders fail, hidden traps, and behavioural mistakes that blow up accounts." />
+                        <SimpleCard id="02" icon={<Globe/>} title="Market Ecosystem" desc="How SEBI, Brokers, FIIs, and DIIs operate, and how big players drive movement." />
+                        <SimpleCard id="03" icon={<LayoutGrid/>} title="Instruments" desc="Types of Financial instruments and types of instruments vehicles" />
+                        <SimpleCard id="04" icon={<Microscope/>} title="Fundamentals" desc="Learn 5 simple steps to find strong companies to invest in." />
+                        <SimpleCard id="05" icon={<BarChart3/>} title="Technical Basics" desc="Different types of charts, candlesticks pattern, Dow Theory, Indicators" />
+                        <SimpleCard id="06" icon={<Target/>} title="Breakout Strategy" desc="The clean price-action strategy we use every day to enter trades." />
+                        <SimpleCard id="07" icon={<ShieldCheck/>} title="Risk Management" desc="The 1% Rule, Position Sizing and Capital Protection framework." />
+                        <SimpleCard id="08" icon={<BookOpen/>} title="Trading Journal" desc="How to track your performance and become your own mentor." />
+                    </div>
+                </section>
+
+                {/* 🗺️ Student Learning Path (Expectation Setting) */}
+                <section id="path" className="mb-64">
+                    <div className="text-center mb-20 space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading">Your Roadmap to Independence</h2>
+                        <p className="text-white/30 text-xs font-black uppercase tracking-[0.4em]">What to expect during your journey</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <PathStep 
+                            num="01" 
+                            title="The 90-Min Masterclass" 
+                            desc="We break your old myths and install the basic 'Institutional Logic' foundation." 
+                            tag="Live Orientation"
+                        />
+                        <PathStep 
+                            num="02" 
+                            title="Practical Assignments" 
+                            desc="You don't just watch. You apply. Weekly tasks to find your first logic-based trade setup." 
+                            tag="Skill Building"
+                        />
+                        <PathStep 
+                            num="03" 
+                            title="Independent Mastery" 
+                            desc="Graduate from 'copy-pasting tips' to making your own confident market decisions." 
+                            tag="The Goal"
+                        />
+                    </div>
+                </section>
+
+                {/* 🌈 8 Pillars Mastery */}
+                <section id="curriculum" className="mb-64">
+                    <div className="text-center mb-24">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6">The 8 Pillars of Mastery</h2>
+                        <p className="text-subtitle text-lg">A logic-based system designed for absolute beginners.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <SimpleCard id="01" icon={<Zap/>} title="Reality Check" desc="Why most traders fail, hidden traps, and behavioural mistakes that blow up accounts." />
+                        <SimpleCard id="02" icon={<Globe/>} title="Market Ecosystem" desc="How SEBI, Brokers, FIIs, and DIIs operate, and how big players drive movement." />
+                        <SimpleCard id="03" icon={<LayoutGrid/>} title="Instruments" desc="Types of Financial instruments and types of instruments vehicles" />
+                        <SimpleCard id="04" icon={<Microscope/>} title="Fundamentals" desc="Learn 5 simple steps to find strong companies to invest in." />
+                        <SimpleCard id="05" icon={<BarChart3/>} title="Technical Basics" desc="Different types of charts, candlesticks pattern, Dow Theory, Indicators" />
+                        <SimpleCard id="06" icon={<Target/>} title="Breakout Strategy" desc="The clean price-action strategy we use every day to enter trades." />
+                        <SimpleCard id="07" icon={<ShieldCheck/>} title="Risk Management" desc="The 1% Rule, Position Sizing and Capital Protection framework." />
+                        <SimpleCard id="08" icon={<BookOpen/>} title="Trading Journal" desc="How to track your performance and become your own mentor." />
+                    </div>
+                </section>
+
+                {/* 🛡️ The Nivesh Link Method (Trust Building) */}
+                <section id="methodology" className="mb-64">
+                    <div className="glass-card rounded-[4rem] p-12 md:p-20 border-blue-500/10 bg-blue-500/[0.02]">
+                        <div className="grid lg:grid-cols-2 gap-20 items-center">
+                            <div className="space-y-10">
+                                <h2 className="text-4xl md:text-6xl font-bold font-heading leading-tight">
+                                    The <span className="text-blue-400">70/30</span> <br />
+                                    Learning Rule
+                                </h2>
+                                <p className="text-readable text-xl leading-relaxed font-medium">
+                                    Most platforms teach 100% theory. We flipped it. Our approach is designed for the modern retail trader who wants results, not a PhD in finance.
+                                </p>
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 font-black">30%</div>
+                                        <div>
+                                            <p className="font-bold text-lg">Core Logic & Framework</p>
+                                            <p className="text-white/30 text-sm">The essential 'Why' behind every market move.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-black">70%</div>
+                                        <div>
+                                            <p className="font-bold text-lg">Live Market Application</p>
+                                            <p className="text-white/30 text-sm">Testing the logic in the current market environment.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="relative group">
+                                <div className="absolute inset-0 bg-blue-500/20 blur-[100px] pointer-events-none group-hover:scale-150 transition-transform duration-1000" />
+                                <div className="glass-card p-10 rounded-[3rem] space-y-8 relative z-10 text-center">
+                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-xs">Why This Works</h4>
+                                    <p className="text-2xl font-bold font-heading italic leading-relaxed">"Knowledge without application is just noise. We focus on building your muscle memory for the markets."</p>
+                                    <div className="flex justify-center gap-4">
+                                        {[1, 2, 3].map(i => <div key={i} className="w-2 h-2 rounded-full bg-blue-500/30" />)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 🎓 Recognition of Progress (Humble Certificate) */}
+                <section id="certification" className="mb-64">
+                    <div className="glass-card rounded-[4rem] p-12 md:p-20 relative overflow-hidden group border-white/5 bg-white/[0.01]">
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] pointer-events-none" />
+                        
+                        <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
+                            <div className="lg:w-1/2 space-y-10">
+                                <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 text-white/50 text-xs font-bold border border-white/10 uppercase tracking-widest">
+                                    <Award size={14} /> Learning Milestone
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-bold font-heading leading-tight">
+                                    A Small Token of <br />
+                                    <span className="text-emerald-500">Your Progress</span>
+                                </h2>
+                                <p className="text-readable text-xl leading-relaxed font-medium">
+                                    This isn't about bragging rights. It's a personal reminder of the day you decided to stop gambling and start learning. Every participant receives a simple Certificate of Attendance.
+                                </p>
+                                <div className="space-y-4 text-white/30 font-bold text-sm">
+                                    <div className="flex items-center gap-4 italic font-medium">
+                                        <CheckCircle2 size={16} className="text-emerald-500/40" />
+                                        Simple digital document for your records.
+                                    </div>
+                                    <div className="flex items-center gap-4 italic font-medium">
+                                        <CheckCircle2 size={16} className="text-emerald-500/40" />
+                                        A marker of your commitment to financial literacy.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="lg:w-1/2 relative flex justify-center">
+                                <div className="relative z-10 w-full max-w-sm aspect-[1.4/1] bg-stone-100 rounded-lg shadow-2xl p-10 flex flex-col items-center justify-between text-zinc-900 border-[12px] border-zinc-200">
+                                    <div className="text-center space-y-2">
+                                        <div className="w-8 h-8 bg-emerald-500 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                                            <TrendingUp className="text-white" size={16} strokeWidth={3}/>
+                                        </div>
+                                        <h4 className="text-sm font-black tracking-[0.3em] text-zinc-400">CERTIFICATE OF ATTENDANCE</h4>
+                                        <h5 className="text-xs font-medium italic text-zinc-500 pb-4">This is to acknowledge the participation of</h5>
+                                        <div className="w-32 h-px bg-zinc-300 mx-auto" />
+                                        <p className="text-xl font-bold font-heading pt-4 text-zinc-800">[Your Name]</p>
+                                        <div className="w-48 h-px bg-zinc-300 mx-auto" />
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400 max-w-[200px] text-center italic">"For completing the Nivesh Link orientation on market logic and risk psychology."</p>
+                                    <div className="flex justify-between w-full pt-6 text-[8px] font-bold text-zinc-300">
+                                        <span className="border-t border-zinc-200 pt-2 px-4 uppercase tracking-widest text-zinc-400">Nivesh Link Team</span>
+                                        <span className="border-t border-zinc-200 pt-2 px-4 uppercase tracking-widest text-zinc-400">{WEBINAR_DATE_DISPLAY}</span>
+                                    </div>
+                                </div>
+                                <div className="absolute -inset-4 bg-emerald-500/10 blur-[60px] -z-10 rounded-full" />
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -381,7 +623,121 @@ export default function WebinarLanding() {
                     </div>
                 </section>
 
-                {/* ❓ NEW: FAQ Section */}
+                {/* 🎯 The Path to Professional Independence (Comparison) */}
+                <section id="comparison" className="mb-64">
+                    <div className="text-center mb-20 space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading">Choose Your Path</h2>
+                        <p className="text-white/30 text-xs font-black uppercase tracking-[0.4em]">From Foundation to Professional Mastery</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-10">
+                        {/* Smart Niveshak */}
+                        <div className="glass-card rounded-[4rem] p-12 border border-white/5 space-y-12 hover:border-emerald-500/20 transition-all flex flex-col">
+                            <div className="space-y-6">
+                                <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
+                                    <Zap size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="text-3xl font-bold font-heading">Smart Niveshak</h3>
+                                    <p className="text-emerald-500/60 font-black uppercase tracking-widest text-[10px] mt-2">The Absolute Foundation</p>
+                                </div>
+                                <p className="text-readable text-lg font-medium opacity-60">
+                                    Perfect for those starting from zero. We build your core logic and market discipline over 4 weeks.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4 flex-1">
+                                <p className="font-bold text-sm uppercase tracking-widest text-white/20 mb-6">Core Outcome</p>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <CheckCircle2 size={18} className="text-emerald-500" />
+                                    <span>Market Logic & Instruments</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <CheckCircle2 size={18} className="text-emerald-500" />
+                                    <span>Technical & Fundamental Basics</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <CheckCircle2 size={18} className="text-emerald-500" />
+                                    <span>Capital Protection Framework</span>
+                                </div>
+                            </div>
+
+                            <Link to="/courses/smart-niveshak" className="bg-emerald-500 text-black py-5 rounded-2xl font-black text-center hover:bg-emerald-400 transition-all shadow-[0_15px_40px_rgba(16,185,129,0.2)]">
+                                Learn More (₹6,000)
+                            </Link>
+                        </div>
+
+                        {/* Elite Niveshak */}
+                        <div className="glass-card rounded-[4rem] p-12 border border-amber-500/20 bg-amber-500/[0.02] space-y-12 hover:border-amber-500/40 transition-all flex flex-col relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 blur-[80px] pointer-events-none" />
+                            <div className="space-y-6">
+                                <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
+                                    <Crown size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="text-3xl font-bold font-heading">Elite Niveshak</h3>
+                                    <p className="text-amber-500/60 font-black uppercase tracking-widest text-[10px] mt-2">Professional Mastery</p>
+                                </div>
+                                <p className="text-readable text-lg font-medium opacity-60">
+                                    For those who want independence. 12 weeks of advanced institutional logic, options, and live trading.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4 flex-1">
+                                <p className="font-bold text-sm uppercase tracking-widest text-white/20 mb-6">Mastery Outcome</p>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <Star size={18} className="text-amber-500" />
+                                    <span>Institutional Breakout Logic</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <Star size={18} className="text-amber-500" />
+                                    <span>Advanced Options Strategies</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-readable font-medium">
+                                    <Star size={18} className="text-amber-500" />
+                                    <span>Live Execution & Portfolio Building</span>
+                                </div>
+                            </div>
+
+                            <Link to="/courses/elite-niveshak" className="bg-amber-500 text-black py-5 rounded-2xl font-black text-center hover:bg-amber-400 transition-all shadow-[0_15px_40px_rgba(245,158,11,0.2)]">
+                                Join Mastery (₹20,000)
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 💬 Testimonials Section */}
+                <section id="testimonials" className="mb-64">
+                    <div className="text-center mb-20 space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading">What Our Students Say</h2>
+                        <p className="text-white/30">Real feedback from real traders.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        {[
+                            { quote: "I was skeptical at first, but the logic-based teaching changed everything for me. Highly recommended!", name: "Rahul S." },
+                            { quote: "The breakout strategy is a game changer. I've finally found consistency in my trades.", name: "Priya M." },
+                            { quote: "Best 90 minutes spent on my financial education. Clear, concise, and professional.", name: "Amit K." }
+                        ].map((t, i) => (
+                            <div key={i} className="glass-card p-10 rounded-[3rem] border border-white/5 space-y-8 hover:border-emerald-500/20 transition-all flex flex-col justify-between">
+                                <div className="space-y-6">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} className="fill-emerald-500 text-emerald-500" />)}
+                                    </div>
+                                    <p className="text-readable text-lg font-medium italic leading-relaxed">"{t.quote}"</p>
+                                </div>
+                                <div className="pt-6 border-t border-white/5 flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-black text-xs">
+                                        {t.name[0]}
+                                    </div>
+                                    <span className="font-bold text-sm tracking-tight">{t.name}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* ❓ FAQ Section */}
                 <section id="faq" className="mb-64 max-w-4xl mx-auto">
                     <div className="text-center mb-20 space-y-4">
                         <h2 className="text-4xl font-bold font-heading">Common Questions</h2>
@@ -422,6 +778,7 @@ export default function WebinarLanding() {
                     </div>
                 </section>
 
+
                 {/* Why Different */}
                 <section className="mb-64">
                     <div className="text-center mb-20">
@@ -460,10 +817,10 @@ export default function WebinarLanding() {
                         </div>
 
                         <div className="space-y-8 text-center md:text-left">
-                            <h4 className="text-blue-400 font-bold uppercase tracking-widest text-xs">Official</h4>
+                            <h4 className="text-blue-400 font-bold uppercase tracking-widest text-xs">Educational Programs</h4>
                             <div className="flex flex-col gap-4 text-sm text-white/30 font-bold">
-                                <a href="#" className="hover:text-white transition-colors">Safety Protocols</a>
-                                <a href="#" className="hover:text-white transition-colors">Privacy Shield</a>
+                                <Link to="/courses/smart-niveshak" className="hover:text-white transition-colors">Smart Niveshak (Foundation)</Link>
+                                <Link to="/courses/elite-niveshak" className="hover:text-white transition-colors">Elite Niveshak (Mastery)</Link>
                                 <a href="#" className="hover:text-white transition-colors">Terms of Use</a>
                             </div>
                         </div>
@@ -482,10 +839,10 @@ export default function WebinarLanding() {
 function SimpleCard({ id, icon, title, desc }: any) {
     return (
         <div className="glass-card rounded-[2.5rem] p-8 md:p-10 group hover:translate-y-[-8px] transition-all cursor-default text-center md:text-left">
-            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mb-8 text-emerald-500 group-hover:scale-110 transition-transform mx-auto md:mx-0">
+            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 text-emerald-500 group-hover:scale-110 transition-transform mx-auto md:mx-0">
                 {icon}
             </div>
-            <div className="text-xs font-bold text-white/10 mb-2 uppercase tracking-widest">{id}</div>
+            <div className="text-xs font-bold text-white/10 mb-2 tracking-widest">{id}</div>
             <h4 className="text-2xl font-bold font-heading mb-4 leading-tight">{title}</h4>
             <p className="text-subtitle text-base leading-relaxed font-medium">{desc}</p>
         </div>
@@ -542,4 +899,36 @@ function Phone({ size = 16, className = "" }: any) {
 
 function Mail({ size = 16, className = "" }: any) {
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
+}
+
+function PathStep({ num, title, desc, tag }: any) {
+    return (
+        <div className="glass-card rounded-[2.5rem] p-10 space-y-6 relative overflow-hidden group border-white/5 bg-white/[0.01]">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-[40px] pointer-events-none" />
+            <div className="flex items-center justify-between">
+                <div className="text-4xl font-black text-white/10 font-heading">{num}</div>
+                <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest text-white/30">
+                    {tag}
+                </div>
+            </div>
+            <h4 className="text-2xl font-bold font-heading">{title}</h4>
+            <p className="text-subtitle font-medium leading-relaxed">{desc}</p>
+        </div>
+    );
+}
+
+function TimeBox({ value, label, color }: any) {
+    const colors: any = {
+        emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+        blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+        purple: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+        rose: "text-rose-500 bg-rose-500/10 border-rose-500/20"
+    };
+
+    return (
+        <div className={`flex flex-col items-center justify-center w-16 md:w-24 h-16 md:h-24 rounded-2xl md:rounded-3xl border ${colors[color]} glass-pill`}>
+            <span className="text-xl md:text-3xl font-black">{value.toString().padStart(2, '0')}</span>
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">{label}</span>
+        </div>
+    );
 }
